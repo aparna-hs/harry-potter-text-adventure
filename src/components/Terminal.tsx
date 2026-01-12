@@ -267,9 +267,17 @@ Not all candidates survive.`, type: 'game' },
     }
   };
 
-  // Status bar component
+  // Health bar component
   const renderHealthBar = () => {
     if (gameState.gamePhase !== 'playing') return null;
+
+    const healthPercent = (gameState.health / gameState.maxHealth) * 100;
+    const filledBlocks = Math.round(healthPercent / 10);
+    const emptyBlocks = 10 - filledBlocks;
+
+    let barColor = 'bg-green-500';
+    if (healthPercent <= 25) barColor = 'bg-red-500';
+    else if (healthPercent <= 50) barColor = 'bg-yellow-500';
 
     // Get current location name
     const currentLocation = gameState.location;
@@ -296,7 +304,16 @@ Not all candidates survive.`, type: 'game' },
       <div className="flex items-center gap-2 px-4 py-2 border-b border-green-900 flex-wrap">
         <span className="text-blue-400">{locationName}</span>
         <span className="text-gray-500 mx-2">|</span>
-        <span className="text-green-400">Health: {gameState.health}/{gameState.maxHealth}</span>
+        <span className="text-green-400">Health:</span>
+        <div className="flex">
+          {[...Array(filledBlocks)].map((_, i) => (
+            <div key={`filled-${i}`} className={`w-3 h-4 ${barColor} mr-0.5`} />
+          ))}
+          {[...Array(emptyBlocks)].map((_, i) => (
+            <div key={`empty-${i}`} className="w-3 h-4 bg-gray-700 mr-0.5" />
+          ))}
+        </div>
+        <span className="text-green-400">{gameState.health}/{gameState.maxHealth}</span>
         <span className="text-gray-500 mx-2">|</span>
         <span className="text-yellow-400">Score: {gameState.score}</span>
         <span className="text-gray-500 mx-2">|</span>
