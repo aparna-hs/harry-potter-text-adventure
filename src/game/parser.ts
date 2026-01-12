@@ -83,7 +83,7 @@ export function parseCommand(input: string): ParsedCommand {
   }
 
   // Check for system commands
-  const systemCommands = ['help', 'hint', 'inventory', 'look', 'score', 'quit', 'restart', 'map'];
+  const systemCommands = ['help', 'hint', 'inventory', 'look', 'score', 'quit', 'restart', 'journey'];
   if (systemCommands.includes(normalized)) {
     return { type: 'system', verb: normalized, rawInput };
   }
@@ -215,7 +215,7 @@ Take items: TAKE [object]
 Use items: USE [item]
 Check score: SCORE
 Get a hint: HINT (if you're stuck)
-See map: MAP
+View journey: JOURNEY
 
 To cast spells, simply type the incantation.
 You must know the correct magical words - this is an examination!
@@ -244,60 +244,49 @@ Keep going. The final chamber awaits.`,
   };
 }
 
-// Handle map command - ASCII visual map (only shows explored areas)
-export function handleMap(state: GameState): CommandResult {
-  const v = state.visitedLocations;
-  const current = state.location;
+// Handle journey command - shows rooms visited in order with directions
+export function handleJourney(state: GameState): CommandResult {
+  if (state.journeyLog.length === 0) {
+    return {
+      message: "Your journey has not yet begun.",
+      state,
+    };
+  }
 
-  // Helper to show a location (only if visited)
-  const show = (loc: string, short: string): string => {
-    if (current === loc) return `[${short}]`;
-    if (v.has(loc)) return ` ${short} `;
-    return ' ?? ';
-  };
+  let journeyDisplay = `╔═══════════════════════════════════╗
+║       YOUR JOURNEY                ║
+╠═══════════════════════════════════╣
+║                                   ║`;
 
-  // Helper to show a connection (only if both endpoints visited)
-  const conn = (loc1: string, loc2: string, symbol: string): string => {
-    if (v.has(loc1) && v.has(loc2)) return symbol;
-    return ' '.repeat(symbol.length);
-  };
+  state.journeyLog.forEach((entry, index) => {
+    const locationName = LOCATIONS[entry.location]?.name || entry.location;
+    const isLast = index === state.journeyLog.length - 1;
+    const lineNumber = `${index + 1}.`;
 
-  // Build ASCII map showing only explored areas
-  const map = `
-╔═══════════════════════════════════════════════════════════════════╗
-║                    EXAMINATION MAZE MAP                           ║
-║           [XX] = Current    XX = Visited    ?? = Unexplored       ║
-╠═══════════════════════════════════════════════════════════════════╣
-║                                                                   ║
-║                          ${show('final_chamber', 'FIN')}                              ║
-║                            ${conn('final_chamber', 'final_approach', '|')}                                      ║
-║                          ${show('final_approach', 'APP')}                              ║
-║                            ${conn('final_approach', 'death_eater_chamber', '|')}                                      ║
-║                          ${show('death_eater_chamber', 'DUE')}                                    ║
-║                            ${conn('death_eater_chamber', 'beyond_guards', '|')}                                      ║
-║          ${show('armory_corridor', 'ARM')} ${conn('armory_corridor', 'beyond_guards', '--------')} ${show('beyond_guards', 'INN')}                              ║
-║            ${conn('armory_corridor', 'training_hall', '|')}                ${conn('beyond_guards', 'guard_corridor', '|')}                                     ║
-║          ${show('training_hall', 'TRN')}            ${show('guard_corridor', 'GRD')}                                ║
-║            ${conn('training_hall', 'chasm_other_side', '|')}                ${conn('guard_corridor', 'beyond_creature', '|')}                                     ║
-║          ${show('chasm_other_side', 'BYC')}            ${show('beyond_creature', 'NTH')}                              ║
-║            ${conn('chasm_other_side', 'dementor_chamber', '|')}   ${conn('chasm_other_side', 'chasm_room', '|')}            ${conn('beyond_creature', 'creature_enclosure', '|')}                                     ║
-║    ${show('dementor_chamber', 'DEM')}   ${show('chasm_room', 'CHA')}       ${show('creature_enclosure', 'CRE')}                               ║
-║      ${conn('dementor_chamber', 'beyond_dementor', '|')}       ${conn('chasm_room', 'deep_tunnel', '|')}              ${conn('creature_enclosure', 'lake_shore', '|')}                                     ║
-║    ${show('beyond_dementor', 'EAS')}   ${show('deep_tunnel', 'TUN')}        ${show('lake_shore', 'SHR')}                              ║
-║      ${conn('beyond_dementor', 'inferi_lake', '|')}       ${conn('deep_tunnel', 'dark_corridor', '|')}   ${conn('deep_tunnel', 'shadow_passage', '|')}            ${conn('lake_shore', 'inferi_lake', '|')}                                     ║
-║    ${show('inferi_lake', 'LAK')} ${show('dark_corridor', 'DRK')} ${show('shadow_passage', 'SHD')} ${conn('shadow_passage', 'hidden_room', '---')} ${show('hidden_room', 'HID')}                    ║
-║             ${conn('dark_corridor', 'entrance_hall', '|')}                                                     ║
-║ ${show('water_passage', 'WAT')} ${conn('water_passage', 'entrance_hall', '---')} ${show('entrance_hall', 'ENT')} ${conn('entrance_hall', 'preparation_room', '---')} ${show('preparation_room', 'PRP')}                              ║
-║                                                                   ║
-╠═══════════════════════════════════════════════════════════════════╣
-║  LEGEND: (rooms revealed as you explore)                          ║
-║  ENT=Entrance  DRK=Dark Corridor  TUN=Deep Tunnel  CHA=Chasm      ║
-║  DEM=Dementor  LAK=Inferi Lake    CRE=Hippogriff   GRD=Guards     ║
-║  TRN=Training  DUE=Death Eater    FIN=Final Chamber               ║
-╚═══════════════════════════════════════════════════════════════════╝`;
+    if (isLast) {
+      // Current location - show "→ YOU ARE HERE"
+      const content = '→ YOU ARE HERE';
+      const padding = 35 - lineNumber.length - content.length - 2; // 2 for spaces
+      journeyDisplay += `\n║  ${lineNumber} ${content}${' '.repeat(Math.max(0, padding))}║`;
+    } else if (entry.direction) {
+      // Previous location with direction
+      const directionText = `(went ${entry.direction})`;
+      const content = `${locationName} ${directionText}`;
+      const padding = 35 - lineNumber.length - content.length - 2;
+      journeyDisplay += `\n║  ${lineNumber} ${content}${' '.repeat(Math.max(0, padding))}║`;
+    } else {
+      // Starting location (no direction)
+      const padding = 35 - lineNumber.length - locationName.length - 2;
+      journeyDisplay += `\n║  ${lineNumber} ${locationName}${' '.repeat(Math.max(0, padding))}║`;
+    }
+  });
+
+  journeyDisplay += `
+║                                   ║
+╚═══════════════════════════════════╝`;
 
   return {
-    message: map,
+    message: journeyDisplay,
     state,
   };
 }

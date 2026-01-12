@@ -13,6 +13,9 @@ export interface GameState {
   hintsUsed: number;
   episkeyCasts: number;
 
+  // Journey log tracking
+  journeyLog: Array<{ location: string; direction?: string }>;
+
   // Challenge-specific state
   challengeState: ChallengeState;
 

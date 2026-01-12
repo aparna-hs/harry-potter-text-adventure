@@ -10,7 +10,7 @@ import {
   handleInventory,
   handleHelp,
   handleScore,
-  handleMap,
+  handleJourney,
   getLocationDescription,
 } from './parser';
 import { matchSpell, getSpellCategory } from './spells';
@@ -29,6 +29,7 @@ export function createInitialState(): GameState {
     score: 0,
     hintsUsed: 0,
     episkeyCasts: 0,
+    journeyLog: [{ location: 'entrance_hall' }],
     challengeState: createInitialChallengeState(),
     combatState: null,
     attemptCounts: {},
@@ -336,10 +337,18 @@ EXAMINATION FAILED - CANDIDATE FELL`,
   const newVisited = new Set(state.visitedLocations);
   newVisited.add(newLocationId);
 
+  // Track journey
+  const newJourneyLog = [
+    ...state.journeyLog.slice(0, -1),
+    { location: state.location, direction },
+    { location: newLocationId },
+  ];
+
   let newState: GameState = {
     ...state,
     location: newLocationId,
     visitedLocations: newVisited,
+    journeyLog: newJourneyLog,
   };
 
   // Handle stealth movement (Muffliato or Invisibility Cloak)
@@ -2593,8 +2602,8 @@ function handleSystem(state: GameState, verb: string): CommandResult {
     case 'score':
       return handleScore(state);
 
-    case 'map':
-      return handleMap(state);
+    case 'journey':
+      return handleJourney(state);
 
     case 'restart':
       return {
