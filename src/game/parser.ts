@@ -53,9 +53,9 @@ const ACTION_SYNONYMS: Record<string, string> = {
   'clue': 'hint',
   'turn': 'leave',
   'turn away': 'leave',
-  'look into': 'touch',
-  'gaze': 'touch',
-  'stare': 'touch',
+  'gaze': 'see',
+  'stare': 'see',
+  'peer': 'see',
   'touch': 'touch',
   'reach': 'touch',
 };
@@ -119,7 +119,7 @@ export function parseCommand(input: string): ParsedCommand {
   const verb = ACTION_SYNONYMS[firstWord] || firstWord;
 
   // Special actions
-  if (['examine', 'take', 'use', 'drop', 'read', 'open', 'close', 'attack', 'bow', 'ride', 'leave', 'crawl', 'claim', 'wear', 'remove', 'touch'].includes(verb)) {
+  if (['examine', 'take', 'use', 'drop', 'read', 'open', 'close', 'attack', 'bow', 'ride', 'leave', 'crawl', 'claim', 'wear', 'remove', 'touch', 'see'].includes(verb)) {
     return { type: 'action', verb, target: rest || undefined, rawInput };
   }
 

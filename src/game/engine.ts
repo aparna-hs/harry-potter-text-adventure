@@ -1631,6 +1631,9 @@ function handleAction(state: GameState, command: ParsedCommand): CommandResult {
     case 'touch':
       return handleTouch(state, target);
 
+    case 'see':
+      return handleSee(state, target);
+
     default:
       if (!target) {
         return { message: `${verb.charAt(0).toUpperCase() + verb.slice(1)} what?`, state };
@@ -1642,13 +1645,32 @@ function handleAction(state: GameState, command: ParsedCommand): CommandResult {
   }
 }
 
-// Handle touching (for Mirror of Erised)
+// Handle seeing (for Mirror of Erised)
+function handleSee(state: GameState, target: string): CommandResult {
+  // Mirror of Erised in final chamber
+  if (state.location === 'final_chamber' && !state.challengeState.finalChallengeComplete) {
+    if (!target || target.includes('mirror') || target.includes('glass') || target.includes('erised')) {
+      return handleSeeMirror(state);
+    }
+  }
+
+  if (!target) {
+    return { message: "See what?", state };
+  }
+
+  return {
+    message: `You look at the ${target}, but nothing special happens.`,
+    state,
+  };
+}
+
+// Handle touching (for Mirror of Erised) - now triggers failure
 function handleTouch(state: GameState, target: string): CommandResult {
   if (!target) {
     return { message: "Touch what?", state };
   }
 
-  // Mirror of Erised in final chamber
+  // Mirror of Erised in final chamber - touching it is bad
   if (state.location === 'final_chamber' && !state.challengeState.finalChallengeComplete &&
       (target.includes('mirror') || target.includes('glass') || target.includes('erised') || target === '')) {
     return handleTouchMirror(state);
@@ -2330,6 +2352,136 @@ their faces stern but approving.
   };
 }
 
+// See Mirror handling (looking into the mirror with random outcomes)
+function handleSeeMirror(state: GameState): CommandResult {
+  if (state.location !== 'final_chamber' || state.challengeState.finalChallengeComplete) {
+    return {
+      message: "There's no mirror here to see.",
+      state,
+    };
+  }
+
+  // Randomly pick one of 3 visions
+  const visionRoll = Math.floor(Math.random() * 3);
+
+  // Vision 1: See yourself as an Auror (pass with O grade)
+  if (visionRoll === 0) {
+    const newState = {
+      ...state,
+      score: state.score + 20,
+      challengesCompleted: new Set([...state.challengesCompleted, 'final']),
+      challengeState: { ...state.challengeState, finalChallengeComplete: true },
+      gamePhase: 'victory' as const,
+    };
+
+    return {
+      message: `You step closer and gaze into the mirror's gleaming surface...
+
+The reflection that stares back is you - but different. You wear the robes of
+an Auror, the badge gleaming on your chest. Behind you, you see grateful faces
+of people you've saved, dark wizards you've brought to justice. But what strikes
+you most is the look in your reflection's eyes: determination, wisdom, and peace.
+
+You realize: this isn't a fantasy of power. This is simply you, having achieved
+what you've worked for through your own merit and dedication.
+
+The voice speaks, warm with approval:
+
+"You have looked into Erised and seen not power, but purpose. Not dominion, but
+duty. The mirror shows you nothing you cannot become through honest effort. This
+is the mark of a true Auror."
+
+The mirror fades, and a door appears.
+
+[FINAL CHALLENGE COMPLETED - +20 points (Outstanding)]
+
+You step through the door and emerge into sunlight. The examiners smile.
+
+"Congratulations, Auror ${state.playerName}. You have earned this."`,
+      state: newState,
+      color: 'gold',
+    };
+  }
+
+  // Vision 2: See yourself happy with family/friends (pass with reduced score)
+  if (visionRoll === 1) {
+    const newState = {
+      ...state,
+      score: state.score + 10,
+      challengesCompleted: new Set([...state.challengesCompleted, 'final']),
+      challengeState: { ...state.challengeState, finalChallengeComplete: true },
+      gamePhase: 'victory' as const,
+    };
+
+    return {
+      message: `You step closer and gaze into the mirror's gleaming surface...
+
+You see yourself surrounded by loved ones - family, friends, all smiling. Everyone
+you care about is safe, happy, together. It's a beautiful vision, and for a moment
+you're lost in it. The warmth, the joy...
+
+But then you catch yourself. This is desire without action. The mirror can't make
+this real - only you can, through your choices and dedication as an Auror.
+
+You step back, breaking the spell.
+
+The voice speaks:
+
+"You gazed into Erised and were tempted by personal happiness. A natural desire,
+but an Auror must remember: duty first, always. You recovered yourself in time.
+You pass, but barely."
+
+The mirror fades, and a door appears.
+
+[FINAL CHALLENGE COMPLETED - +10 points (Acceptable)]
+
+You step through. The examiners nod curtly.
+
+"You passed. But remember: hesitation costs lives in the field."`,
+      state: newState,
+      color: 'warning',
+    };
+  }
+
+  // Vision 3: See power, control, dark magic (FAIL)
+  const newState = {
+    ...state,
+    score: 0,
+    challengeState: { ...state.challengeState, finalChallengeComplete: true },
+    gamePhase: 'death' as const,
+  };
+
+  return {
+    message: `You step closer and gaze into the mirror's gleaming surface...
+
+You see yourself - powerful, commanding, feared. Dark wizards bow before you.
+Ancient magic crackles at your fingertips. You stand above everyone, answering
+to no one. Supreme. Unstoppable.
+
+The vision is intoxicating. You lean closer, wanting more...
+
+"ENOUGH!"
+
+Examiners rush in and pull you away. You struggle against them, desperate to
+see more of that glorious vision.
+
+The voice speaks, cold and final:
+
+"You have failed. The mirror revealed your true desire: not to serve and protect,
+but to dominate and control. You would have become exactly what Aurors are sworn
+to fight against."
+
+═══════════════════════════════════════════════════════════════════
+
+EXAMINATION FAILED - CORRUPTED BY DESIRE
+
+An Auror who desires power above all else is a Dark wizard in waiting.
+This is an automatic disqualification, regardless of previous performance.`,
+    state: newState,
+    color: 'damage',
+  };
+}
+
 // Touch Mirror handling (reaching for the mirror = failure)
 function handleTouchMirror(state: GameState): CommandResult {
   if (state.location !== 'final_chamber' || state.challengeState.finalChallengeComplete) {
@@ -2679,7 +2831,7 @@ function handleHint(state: GameState): CommandResult {
       };
     }
     return {
-      message: "TURN AWAY from the mirror to pass, or LOOK INTO it to see your heart's desire (and fail).",
+      message: "TURN AWAY from the mirror to pass safely, or SEE what it reveals (risky - you might fail).",
       state: newState,
     };
   }

@@ -659,8 +659,8 @@ As you approach, a voice echoes through the chamber:
 "Final assessment. You have demonstrated skill and courage. But an Auror must
 also resist temptation. This mirror shows the deepest desire of your heart."
 
-"LOOK INTO the mirror to see what you most desire."
-"Or TURN AWAY now, before it ensnares you."
+"Will you SEE what the mirror reveals?"
+"Or TURN AWAY now, before it ensnares you?"
 
 The glass seems to shimmer, beckoning you closer...`;
     },
