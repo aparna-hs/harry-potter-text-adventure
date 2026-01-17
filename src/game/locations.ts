@@ -426,15 +426,12 @@ South leads back to the enclosure.`,
 The way north is clear. South leads back the way you came.`;
       }
 
-      // Check for any stealth (muffliato or cloak)
-      const hasStealth = state.challengeState.stealthActive || state.challengeState.wearingCloak;
+      // Check for cloak stealth
+      const hasStealth = state.challengeState.wearingCloak;
       if (hasStealth) {
-        const method = state.challengeState.wearingCloak
-          ? "Your Invisibility Cloak renders you unseen."
-          : "Your footsteps are muffled by the Muffliato charm.";
-        return `Two figures in dark robes patrol the corridor ahead. ${method}
-The guards continue their patrol, unaware of your presence. The exit lies just ahead
-to the north - you can slip past them while hidden.`;
+        return `Two figures in dark robes patrol the corridor ahead. Your Invisibility Cloak
+renders you completely unseen. The guards continue their patrol, oblivious to your
+presence. The exit lies just ahead to the north - you can slip past them while hidden.`;
       }
 
       if (state.challengeState.guardsAlerted) {
@@ -442,7 +439,8 @@ to the north - you can slip past them while hidden.`;
 
 "Find them! They can't have gone far!"
 
-You need to hide (MUFFLIATO or WEAR CLOAK), or fight them with offensive spells.
+You're spotted. You need a solution fast - perhaps magic to confuse them,
+something to hide yourself, or you could fight them directly.
 The passage north leads to the inner sanctum. South leads back the way you came.`;
       }
 
@@ -454,8 +452,8 @@ glancing toward your direction.
 "Probably another candidate who didn't make it past the lake..."
 
 They're between you and the passage north. You could try to fight them, but
-they look experienced, and there are two of them. Perhaps there's a stealthier
-approach - maybe a sound-muffling spell or something to make yourself unseen.`;
+they look experienced, and there are two of them. An Auror knows when to avoid
+unnecessary combat. There must be a cleverer way...`;
     },
   },
 

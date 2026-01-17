@@ -199,42 +199,43 @@ EXAMINATION FAILED - CANDIDATE DROWNED`,
     };
   }
 
-  // Guard attacks if player is spotted (in corridor without stealth)
-  // Cloak also provides protection from guards
-  const hasGuardStealth = state.challengeState.stealthActive || state.challengeState.wearingCloak;
+  // Guard attacks if player is spotted and tries to do anything
+  // Only cloak provides protection from guards
+  const hasGuardStealth = state.challengeState.wearingCloak;
   if (state.location === 'guard_corridor' &&
       !state.challengeState.stealthPassed &&
       !hasGuardStealth &&
       state.challengeState.guardsAlerted) {
-    const damage = 12;
+    const damage = 15;
     const newHealth = Math.max(0, state.health - damage);
 
     if (newHealth <= 0) {
       return {
-        message: result.message + `\n\nThe guards unleash a barrage of curses.
-You try to fight back, but there are too many of them...
+        message: result.message + `\n\n"INTRUDER!" The guards spot your movement!
 
-Multiple Stunning Spells hit you simultaneously. Your heart stops.
+Multiple curses fly at you. You try to dodge, but there are too many.
+Stunning Spells hit you from both sides. Your heart stops.
+
 "Excessive force noted," one guard says flatly to the other.
 
-EXAMINATION FAILED - CANDIDATE SUBDUED`,
+EXAMINATION FAILED - SUBDUED BY GUARDS`,
         state: { ...state, health: 0, gamePhase: 'death' },
         color: 'damage',
       };
     }
 
     const attackMessages = [
-      'A Stunning Spell narrowly misses you!',
-      'You dodge a jet of red light from one of the guards!',
-      '"Stop right there!" A curse grazes your shoulder!',
-      'Both guards attack at once - you barely escape!',
+      '"STOP!" A Stunning Spell narrowly misses you!',
+      'You dodge a jet of red light - barely!',
+      '"Intruder!" A curse grazes your shoulder!',
+      'Both guards attack at once!',
     ];
     const attackMsg = attackMessages[Math.floor(Math.random() * attackMessages.length)];
 
     return {
       message: result.message + `\n\n${attackMsg} [-${damage} HP]
 
-You need to either fight (STUPEFY, EXPELLIARMUS) or find a way to hide!`,
+The guards are alert and attacking. You need a solution quickly!`,
       state: { ...state, health: newHealth },
       color: result.color === 'magic' ? 'magic' : 'damage',
     };
@@ -351,28 +352,23 @@ EXAMINATION FAILED - CANDIDATE FELL`,
     journeyLog: newJourneyLog,
   };
 
-  // Handle stealth movement (Muffliato or Invisibility Cloak)
-  const hasStealthForGuards = state.challengeState.stealthActive || state.challengeState.wearingCloak;
+  // Handle stealth movement (Invisibility Cloak only)
+  const hasStealthForGuards = state.challengeState.wearingCloak;
   if (hasStealthForGuards && newLocationId === 'beyond_guards') {
-    const usedCloak = state.challengeState.wearingCloak;
     newState = {
       ...newState,
       challengeState: {
         ...newState.challengeState,
-        stealthActive: false,
         stealthPassed: true,
       },
       score: newState.score + 10,
       challengesCompleted: new Set([...newState.challengesCompleted, 'stealth']),
     };
 
-    const methodDesc = usedCloak
-      ? "The guards look right through you, unable to see beneath your Invisibility Cloak."
-      : "Your footsteps are muffled by the Muffliato charm.";
-
     return {
-      message: `You slip past the guards undetected. ${methodDesc}
-They continue their patrol, completely unaware of your passage.
+      message: `You slip past the guards undetected. The guards look right through you,
+unable to see beneath your Invisibility Cloak. They continue their patrol,
+completely unaware of your passage.
 
 [STEALTH SECTION COMPLETED - +10 points]
 
@@ -411,26 +407,26 @@ ${getLocationDescription(newState)}`,
   }
 
   // Alert guards when entering guard corridor without stealth
-  // Check for cloak OR muffliato stealth
-  const hasStealthOnEntry = newState.challengeState.stealthActive || newState.challengeState.wearingCloak;
+  // Check for cloak stealth only
+  const hasStealthOnEntry = newState.challengeState.wearingCloak;
   if (newLocationId === 'guard_corridor' &&
       !newState.challengeState.stealthPassed &&
       !hasStealthOnEntry) {
-    const damage = 10;
+    // Just mark as alerted, but don't damage yet - give them a chance
     newState = {
       ...newState,
-      health: Math.max(0, newState.health - damage),
       challengeState: { ...newState.challengeState, guardsAlerted: true },
     };
-    extraMessage = `\n\n"INTRUDER!" One of the guards spots you and fires a curse! [-${damage} HP]
+    extraMessage = `\n\nYou freeze. Two guards patrol ahead, wands drawn. They haven't spotted you yet,
+but they're alert. Fighting two experienced guards head-on would be dangerous.
 
-You're under attack! Cast MUFFLIATO to hide, WEAR CLOAK if you have one, or fight back!`;
+Perhaps there's a cleverer way past them...`;
   } else if (newLocationId === 'guard_corridor' &&
              !newState.challengeState.stealthPassed &&
              hasStealthOnEntry) {
     // Entering with stealth active - show guards but they don't see you
-    extraMessage = `\n\nTwo guards patrol ahead. They don't notice you slip into the corridor.
-You can proceed north past them while remaining hidden.`;
+    extraMessage = `\n\nTwo guards patrol ahead. They don't notice you slip into the corridor,
+invisible beneath your cloak. You can proceed north past them undetected.`;
   }
 
   // Hippogriff attacks if you try to pass without showing respect
@@ -536,8 +532,8 @@ function handleSpell(state: GameState, command: ParsedCommand): CommandResult {
     case 'depulso':
       return handleOffensiveSpell(state, spellName);
 
-    case 'muffliato':
-      return handleMuffliato(state);
+    case 'confundo':
+      return handleConfundo(state);
 
     case 'episkey':
       return handleEpiskey(state);
@@ -1410,11 +1406,11 @@ ${taunt}`,
   };
 }
 
-// Muffliato handling
-function handleMuffliato(state: GameState): CommandResult {
+// Confundo handling - confuses guards to lure them away
+function handleConfundo(state: GameState): CommandResult {
   if (state.location !== 'guard_corridor') {
     return {
-      message: '"Muffliato!"\n\nA faint buzzing fills the air around you, muffling nearby sounds.',
+      message: '"Confundo!"\n\nThe spell shoots from your wand, but there\'s no one here to confuse.',
       state,
       color: 'magic',
     };
@@ -1429,41 +1425,47 @@ function handleMuffliato(state: GameState): CommandResult {
 
   const newState = {
     ...state,
+    score: state.score + 10,
+    challengesCompleted: new Set([...state.challengesCompleted, 'stealth']),
     challengeState: {
       ...state.challengeState,
-      stealthActive: true,
-      guardsAlerted: false, // Reset alerted state - you've hidden
+      stealthPassed: true,
+      guardsAlerted: false,
     },
   };
 
   // Different message depending on if guards were already alerted
   if (state.challengeState.guardsAlerted) {
     return {
-      message: `"Muffliato!"
+      message: `"Confundo!"
 
-The buzzing charm surrounds you, and you slip behind a pillar. The guards look
-around in confusion, their curses fading.
+Your spell strikes one of the guards. His eyes glaze over momentarily.
 
-"Where'd they go?"
-"Must have been a ghost. Let's continue patrol."
+"Did you hear that noise down the east corridor?" he says suddenly.
+"We should check it out immediately!"
 
-They resume their route, unaware you're still here. You can now move north
-past them undetected.`,
+Both guards hurry off in the wrong direction, completely forgetting about you.
+The path north is clear.
+
+[STEALTH SECTION COMPLETED - +10 points]`,
       state: newState,
       color: 'magic',
     };
   }
 
   return {
-    message: `"Muffliato!"
+    message: `"Confundo!"
 
-A buzzing charm surrounds you, muffling your footsteps. The guards continue
-their conversation, oblivious.
+Your spell strikes one of the guards before they fully notice you. His eyes
+glaze over, confused.
 
-"...heard the Dementor got another one..."
-"Shame. That's the third this month."
+"Wait... did we finish our patrol of the east wing?"
+"I... I don't think so. We should head there now."
 
-You can now move north past them undetected.`,
+The guards wander off in the wrong direction, thoroughly bewildered. The path
+north is clear.
+
+[STEALTH SECTION COMPLETED - +10 points]`,
     state: newState,
     color: 'magic',
   };
@@ -2839,14 +2841,16 @@ function handleHint(state: GameState): CommandResult {
       };
     }
     if (attempts < 5) {
+      // Reduce score for needing this hint
       return {
-        message: "A spell that muffles sound... the Half-Blood Prince invented one.",
-        state: newState,
+        message: `Something to hide yourself, or a spell to confuse them... [-3 points for hint]`,
+        state: { ...newState, score: Math.max(0, newState.score - 3) },
       };
     }
+    // Major hint - bigger score reduction
     return {
-      message: "Cast 'Muffliato' to muffle your footsteps, then go north.",
-      state: newState,
+      message: `Use 'Confundo' to confuse the guards, or WEAR CLOAK if you found the Invisibility Cloak. [-5 points for detailed hint]`,
+      state: { ...newState, score: Math.max(0, newState.score - 5) },
     };
   }
 

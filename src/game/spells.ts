@@ -50,9 +50,9 @@ export const SPELLS: Record<string, SpellDefinition> = {
   'reducio': { incantation: 'reducio', category: 'utility' },
   'engorgio': { incantation: 'engorgio', category: 'utility' },
 
-  // Stealth spells
-  'muffliato': { incantation: 'muffliato', category: 'stealth' },
-  'silencio': { incantation: 'silencio', category: 'stealth' },
+  // Mind spells
+  'confundo': { incantation: 'confundo', category: 'utility' },
+  'obliviate': { incantation: 'obliviate', category: 'utility' },
 
   // Healing spells
   'episkey': { incantation: 'episkey', category: 'healing' },
