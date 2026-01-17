@@ -353,8 +353,12 @@ EXAMINATION FAILED - CANDIDATE FELL`,
   };
 
   // Handle stealth movement (Invisibility Cloak only)
+  // Only trigger when coming FROM guard_corridor and haven't already passed
   const hasStealthForGuards = state.challengeState.wearingCloak;
-  if (hasStealthForGuards && newLocationId === 'beyond_guards') {
+  if (hasStealthForGuards &&
+      newLocationId === 'beyond_guards' &&
+      state.location === 'guard_corridor' &&
+      !state.challengeState.stealthPassed) {
     newState = {
       ...newState,
       challengeState: {
