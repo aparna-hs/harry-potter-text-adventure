@@ -134,13 +134,13 @@ export function processCommand(state: GameState, input: string): CommandResult {
   }
 
   // Apply continuous creature damage if engaged
-  result = applyCreatureDamage(result);
+  result = applyCreatureDamage(result, command);
 
   return result;
 }
 
 // Apply continuous damage from engaged creatures
-function applyCreatureDamage(result: CommandResult): CommandResult {
+function applyCreatureDamage(result: CommandResult, command: ParsedCommand): CommandResult {
   const state = result.state;
 
   // Dementor continuous damage
@@ -239,6 +239,65 @@ The guards are alert and attacking. You need a solution quickly!`,
       state: { ...state, health: newHealth },
       color: result.color === 'magic' ? 'magic' : 'damage',
     };
+  }
+
+  // Death Eater duel - continuous damage if player doesn't use combat spells
+  if (state.location === 'death_eater_chamber' &&
+      !state.challengeState.deathEaterDefeated) {
+
+    // Check if the command was a combat spell (offensive or defensive)
+    const combatSpells = ['stupefy', 'expelliarmus', 'petrificus totalus', 'impedimenta',
+                          'reducto', 'confringo', 'incendio', 'flipendo', 'depulso',
+                          'protego', 'protego maxima'];
+    const isCombatSpell = command.type === 'spell' && combatSpells.includes(command.verb);
+
+    // If not a combat spell, Death Eater attacks
+    if (!isCombatSpell) {
+      const damage = 15;
+      const newHealth = Math.max(0, state.health - damage);
+      const round = state.challengeState.duelRound;
+
+      if (newHealth <= 0) {
+        return {
+          message: result.message + `\n\nWhile you hesitate, the Death Eater strikes!
+
+A dark curse tears through you. Your wand clatters to the floor.
+
+The masked figure stands over you, lowering their wand.
+"Another one who wasn't ready," they say coldly.
+
+EXAMINATION FAILED - DEFEATED IN COMBAT`,
+          state: { ...state, health: 0, gamePhase: 'death' },
+          color: 'damage',
+        };
+      }
+
+      // Increment duel round since a turn passed
+      const newState = {
+        ...state,
+        health: newHealth,
+        challengeState: {
+          ...state.challengeState,
+          duelRound: round + 1,
+        },
+      };
+
+      const attackMessages = [
+        'The Death Eater seizes your hesitation! A curse flies at you!',
+        '"Focus on the duel!" A hex catches you off guard!',
+        'While distracted, you take a direct hit from their wand!',
+        'The Death Eater attacks while you waste time!',
+      ];
+      const attackMsg = attackMessages[round % attackMessages.length];
+
+      return {
+        message: result.message + `\n\n${attackMsg} [-${damage} HP]
+
+You're in a duel! Attack with combat spells or defend with Protego!`,
+        state: newState,
+        color: 'damage',
+      };
+    }
   }
 
   return result;
