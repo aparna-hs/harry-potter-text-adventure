@@ -352,6 +352,14 @@ EXAMINATION FAILED - CANDIDATE FELL`,
     journeyLog: newJourneyLog,
   };
 
+  // Call onEnter handler if location has one
+  let onEnterMessage = '';
+  if (newLocation.onEnter) {
+    const result = newLocation.onEnter(newState);
+    newState = result.state;
+    onEnterMessage = result.message;
+  }
+
   // Handle stealth movement (Invisibility Cloak only)
   // Only trigger when coming FROM guard_corridor and haven't already passed
   const hasStealthForGuards = state.challengeState.wearingCloak;
@@ -481,7 +489,7 @@ ${getLocationDescription(state)}`,
   }
 
   return {
-    message: description + extraMessage,
+    message: description + onEnterMessage + extraMessage,
     state: newState,
     color: extraMessage ? 'damage' : 'normal',
   };

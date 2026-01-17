@@ -591,6 +591,26 @@ This appears to be a dead end - the water gets too deep to proceed safely.`,
     },
     items: [],
     challenge: 'duel',
+    onEnter: (state: GameState) => {
+      // Remove invisibility cloak if wearing it - can't duel while invisible
+      if (state.challengeState.wearingCloak) {
+        return {
+          state: {
+            ...state,
+            challengeState: {
+              ...state.challengeState,
+              wearingCloak: false,
+            },
+          },
+          message: `\n\nAs you step into the dueling chamber, the protective runes flare with
+golden light. Your Invisibility Cloak is pulled away by the magical wards - the
+chamber's ancient enchantments won't allow concealment during a formal duel.
+
+You're fully visible now. This will be a fair fight.`,
+        };
+      }
+      return { state, message: '' };
+    },
     getDescription: (state: GameState) => {
       if (state.challengeState.deathEaterDefeated) {
         return `The dueling chamber is quiet. Your opponent lies unconscious on the floor,
