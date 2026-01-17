@@ -375,23 +375,32 @@ Not all candidates survive.`, type: 'game' },
       </div>
 
       {/* Input Area */}
-      <div className="border-t border-green-900 px-2 sm:px-4 py-2 sm:py-4 bg-gray-900">
-        <div className="flex items-center">
-          <span className="text-green-400 mr-1 sm:mr-2 text-xs sm:text-sm">&gt;</span>
+      <div className="border-t-2 border-green-500 px-2 sm:px-4 py-3 sm:py-4 bg-gray-900">
+        <div className="flex items-center gap-2">
+          <span className="text-green-400 mr-1 text-sm sm:text-sm font-bold">&gt;</span>
           <input
             ref={inputRef}
             type="text"
             value={inputValue}
             onChange={(e) => setInputValue(e.target.value)}
             onKeyDown={handleKeyDown}
-            className="flex-1 bg-transparent text-green-400 outline-none font-mono text-xs sm:text-sm"
+            className="flex-1 bg-gray-800 text-green-400 outline-none font-mono text-sm sm:text-sm px-2 py-2 rounded border border-green-700 focus:border-green-500"
+            placeholder={isMobile ? "Type command..." : "Type your command..."}
             autoFocus
             autoComplete="off"
             autoCapitalize="off"
             autoCorrect="off"
             spellCheck={false}
           />
-          <span className="text-green-400 cursor-blink text-xs sm:text-sm">_</span>
+          <button
+            onClick={() => {
+              handleCommand(inputValue);
+              setInputValue('');
+            }}
+            className="bg-green-700 hover:bg-green-600 text-white px-3 sm:px-4 py-2 rounded font-mono text-sm font-bold border border-green-500 active:bg-green-800 min-w-[60px] sm:min-w-[70px]"
+          >
+            {isMobile ? '⏎' : 'SEND'}
+          </button>
         </div>
       </div>
     </div>
