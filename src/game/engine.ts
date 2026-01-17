@@ -45,7 +45,6 @@ function createInitialChallengeState(): ChallengeState {
     lumosActive: false,
     levitationBridgeBuilt: false,
     dementorDefeated: false,
-    protegoTrainingComplete: false,
     inferiCleared: false,
     hippogriffBowed: false,
     hippogriffTrusts: false,
@@ -902,85 +901,12 @@ brought you the greatest joy?`,
 
 // Protego handling
 function handleProtego(state: GameState, maxima: boolean): CommandResult {
-  if (state.location !== 'training_hall' && state.location !== 'death_eater_chamber' && state.location !== 'guard_corridor') {
+  if (state.location !== 'death_eater_chamber' && state.location !== 'guard_corridor') {
     return {
       message: `"${maxima ? 'Protego Maxima!' : 'Protego!'}"\n\nA shimmering shield forms before you, then fades. There's no attack to block.`,
       state,
       color: 'magic',
     };
-  }
-
-  // Training Hall challenge
-  if (state.location === 'training_hall' && !state.challengeState.protegoTrainingComplete) {
-    if (!state.combatState) {
-      // Initialize combat with dummy
-      const newState = {
-        ...state,
-        combatState: {
-          enemy: 'Training Dummy',
-          enemyHealth: 3, // 3 hits to defeat
-          enemyMaxHealth: 3,
-          round: 1,
-          playerDefending: true,
-        },
-      };
-
-      return {
-        message: `"${maxima ? 'Protego Maxima!' : 'Protego!'}"\n\nA shimmering shield springs into existence just as the dummy fires a Stinging Hex!
-The curse splashes harmlessly against your shield.
-
-The dummy's wand glows again, preparing another attack. You must continue to
-defend or counter-attack!`,
-        state: newState,
-        color: 'magic',
-      };
-    } else {
-      // Continue combat - successful defense
-      const combat = state.combatState;
-      const newRound = combat.round + 1;
-
-      if (newRound >= 4) {
-        // Survived all rounds
-        const newState = {
-          ...state,
-          combatState: null,
-          score: state.score + 10,
-          challengesCompleted: new Set([...state.challengesCompleted, 'protego']),
-          challengeState: { ...state.challengeState, protegoTrainingComplete: true },
-        };
-
-        return {
-          message: `"Protego!"
-
-Your shield holds strong against the final curse. The training dummy's wand arm
-lowers, runes dimming. A mechanical voice announces:
-
-"COMBAT ASSESSMENT COMPLETE. ADEQUATE DEFENSIVE SKILLS DEMONSTRATED."
-
-The dummy returns to its inactive state.
-
-[PROTEGO TRAINING COMPLETED - +10 points]`,
-          state: newState,
-          color: 'magic',
-        };
-      }
-
-      const newState = {
-        ...state,
-        combatState: { ...combat, round: newRound, playerDefending: true },
-      };
-
-      const curses = ['Stinging Hex', 'Knockback Jinx', 'Impediment Jinx'];
-      const curse = curses[newRound - 1] || 'curse';
-
-      return {
-        message: `"Protego!"
-
-Your shield blocks the ${curse}! The dummy prepares another attack...`,
-        state: newState,
-        color: 'magic',
-      };
-    }
   }
 
   // Death Eater duel
@@ -1068,145 +994,6 @@ The path to the eastern shore is clear.
 
 // Offensive spell handling
 function handleOffensiveSpell(state: GameState, spell: string): CommandResult {
-  // Training Hall - can start combat with attack or counter-attack the dummy
-  if (state.location === 'training_hall' && !state.challengeState.protegoTrainingComplete) {
-    // Initialize combat if not started
-    if (!state.combatState) {
-      // Starting with an attack - risky but valid
-      const damage = 10; // Take damage for attacking without defending first
-      const newHealth = Math.max(0, state.health - damage);
-
-      if (newHealth <= 0) {
-        return {
-          message: `"${spell.charAt(0).toUpperCase() + spell.slice(1)}!"
-
-You attack first, but the dummy is faster! Its Stinging Hex catches you full force.
-You stumble backward and collapse. The training dummy returns to standby mode.
-
-EXAMINATION FAILED - TRAINING CASUALTY`,
-          state: { ...state, health: 0, gamePhase: 'death' },
-          color: 'damage',
-        };
-      }
-
-      const newCombat = {
-        enemy: 'Training Dummy',
-        enemyHealth: 2, // 3 hits to destroy, you got 1 in
-        enemyMaxHealth: 3,
-        round: 2,
-        playerDefending: false,
-      };
-
-      return {
-        message: `"${spell.charAt(0).toUpperCase() + spell.slice(1)}!"
-
-You attack first! Your spell connects with the dummy, damaging it. But attacking
-without defending leaves you open - the dummy's hex catches your shoulder! [-${damage} HP]
-
-The dummy prepares another attack. Consider defending with PROTEGO, or keep attacking!`,
-        state: { ...state, health: newHealth, combatState: newCombat },
-        color: 'damage',
-      };
-    }
-
-    const combat = state.combatState;
-
-    // Check if player didn't defend - they take damage
-    if (!combat.playerDefending && combat.round > 1) {
-      const damage = 15;
-      const newHealth = Math.max(0, state.health - damage);
-
-      if (newHealth <= 0) {
-        return {
-          message: `You try to cast ${spell}, but the dummy's curse hits you first!
-The impact sends you flying backward. You hit the wall hard and everything goes dark.
-
-The training dummy returns to its starting position, ready for the next candidate.
-Your body lies crumpled against the wall.
-
-EXAMINATION FAILED - TRAINING CASUALTY`,
-          state: { ...state, health: 0, gamePhase: 'death' },
-          color: 'damage',
-        };
-      }
-
-      const newCombat = {
-        ...combat,
-        enemyHealth: Math.max(0, combat.enemyHealth - 1),
-        playerDefending: false,
-      };
-
-      if (newCombat.enemyHealth <= 0) {
-        const newState = {
-          ...state,
-          health: newHealth,
-          combatState: null,
-          score: state.score + 10,
-          challengesCompleted: new Set([...state.challengesCompleted, 'protego']),
-          challengeState: { ...state.challengeState, protegoTrainingComplete: true },
-        };
-
-        return {
-          message: `You cast ${spell} just as the dummy fires! Both spells connect.
-You take a hit [-${damage} HP], but your spell destroys the dummy's wand arm.
-
-"COMBAT ASSESSMENT COMPLETE."
-
-[PROTEGO TRAINING COMPLETED - +10 points]`,
-          state: newState,
-          color: 'damage',
-        };
-      }
-
-      return {
-        message: `You and the dummy trade spells! You take a hit [-${damage} HP], but your
-${spell} damages the dummy. It prepares another attack...`,
-        state: { ...state, health: newHealth, combatState: newCombat },
-        color: 'damage',
-      };
-    }
-
-    // Player defended and is counter-attacking
-    const newCombat = {
-      ...combat,
-      enemyHealth: Math.max(0, combat.enemyHealth - 1),
-      round: combat.round + 1,
-      playerDefending: false,
-    };
-
-    if (newCombat.enemyHealth <= 0) {
-      const newState = {
-        ...state,
-        combatState: null,
-        score: state.score + 10 + 5, // Bonus for aggressive win
-        challengesCompleted: new Set([...state.challengesCompleted, 'protego']),
-        challengeState: { ...state.challengeState, protegoTrainingComplete: true },
-      };
-
-      return {
-        message: `"${spell.charAt(0).toUpperCase() + spell.slice(1)}!"
-
-Your spell strikes the dummy square in the chest, sending it flying backward.
-Sparks shower from its damaged mechanisms.
-
-"COMBAT ASSESSMENT COMPLETE. EXCELLENT OFFENSIVE CAPABILITY."
-
-[PROTEGO TRAINING COMPLETED - +15 points (Offensive bonus)]`,
-        state: newState,
-        color: 'magic',
-      };
-    }
-
-    return {
-      message: `"${spell.charAt(0).toUpperCase() + spell.slice(1)}!"
-
-Your spell connects, damaging the dummy. But it's still functional and preparing
-another attack!`,
-      state: { ...state, combatState: newCombat },
-      color: 'magic',
-    };
-  }
-
   // Death Eater duel
   if (state.location === 'death_eater_chamber' && !state.challengeState.deathEaterDefeated) {
     return handleDeathEaterCombat(state, spell);
@@ -1670,7 +1457,7 @@ function handleAccio(state: GameState, target: string): CommandResult {
 
   if (normalizedTarget.includes('dittany')) {
     // Check if near armory or preparation room
-    const nearHealingAreas = ['armory_corridor', 'preparation_room', 'beyond_guards', 'training_hall'];
+    const nearHealingAreas = ['armory_corridor', 'preparation_room', 'beyond_guards'];
     if (nearHealingAreas.includes(state.location) && !state.inventory.includes('dittany')) {
       return {
         message: `"Accio Dittany!"
@@ -1895,18 +1682,6 @@ Hagrid's lessons echo in your memory.`,
       };
     }
 
-    if (location === 'training_hall' && !state.challengeState.protegoTrainingComplete) {
-      return {
-        message: `Combat runes circle the training floor:
-
-"The wise warrior shields before striking.
-But the bold warrior may strike first - at their peril."
-
-Both defensive and offensive approaches seem valid.`,
-        state,
-      };
-    }
-
     if (location === 'guard_corridor' && !state.challengeState.stealthPassed) {
       return {
         message: `Discrete markings on the wall suggest:
@@ -2012,20 +1787,6 @@ half is the powerful body of a horse.
 Its orange eyes watch you with fierce intelligence. These creatures are proud
 and dangerous, but not evil. They demand respect. You recall Professor Hagrid's
 lessons on proper etiquette...`,
-      state,
-    };
-  }
-
-  // Training dummy
-  if (location === 'training_hall' && !state.challengeState.protegoTrainingComplete &&
-      (target.includes('dummy') || target.includes('mannequin'))) {
-    return {
-      message: `An enchanted training dummy, designed to test combat reflexes. It wears dark
-robes and has a wand mounted on its right arm. Runes along its base control
-its behavior.
-
-It stands ready to fire curses in sequence. You'll need to defend yourself
-or counter-attack.`,
       state,
     };
   }
@@ -2925,20 +2686,6 @@ function handleHint(state: GameState): CommandResult {
     return {
       message: addPenalty("Use 'Confundo' to confuse the guards, or WEAR CLOAK if you found the Invisibility Cloak.", 5),
       state: { ...newState, score: Math.max(0, newState.score - 5) },
-    };
-  }
-
-  // Training hall
-  if (location === 'training_hall' && !state.challengeState.protegoTrainingComplete) {
-    if (attempts < 3) {
-      return {
-        message: addPenalty("Combat requires balance - defense and offense. The dummy won't wait."),
-        state: newState,
-      };
-    }
-    return {
-      message: addPenalty("Use 'Protego' to block, or offensive spells like 'Stupefy' to attack."),
-      state: newState,
     };
   }
 

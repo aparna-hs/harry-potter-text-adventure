@@ -233,7 +233,7 @@ export function handleScore(state: GameState): CommandResult {
   return {
     message: `EXAMINATION PROGRESS
 
-Challenges completed: ${completedChallenges}/9
+Challenges completed: ${completedChallenges}/8
 Current score: ${state.score} points
 Hints used: ${state.hintsUsed}
 Health: ${state.health}/${state.maxHealth}

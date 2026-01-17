@@ -34,7 +34,6 @@ export interface ChallengeState {
   lumosActive: boolean;
   levitationBridgeBuilt: boolean;
   dementorDefeated: boolean;
-  protegoTrainingComplete: boolean;
   inferiCleared: boolean;
   hippogriffBowed: boolean;
   hippogriffTrusts: boolean;

@@ -164,35 +164,15 @@ The passage continues north across the bridge, and south behind you.`;
     id: 'chasm_other_side',
     name: 'Beyond the Chasm',
     description: `You've crossed the chasm. The passage here is wider, with elaborate
-carvings depicting famous Aurors in battle.`,
+carvings depicting famous Aurors in battle.
+
+An archway to the east leads to a chamber that emanates cold. The examination
+trials await in that direction. The chasm lies to the south.`,
     connections: {
       'south': 'chasm_room',
-      'north': 'training_hall',
       'east': 'dementor_chamber',
     },
     items: [],
-    getDescription: (state: GameState) => {
-      const allEasternComplete = state.challengeState.dementorDefeated &&
-                                 state.challengeState.inferiCleared &&
-                                 state.challengeState.hippogriffTrusts;
-
-      let desc = `You've crossed the chasm. The passage here is wider, with elaborate
-carvings depicting famous Aurors in battle.`;
-
-      if (allEasternComplete) {
-        desc += `\n\nThe magical barrier to the north has dissolved. You can now proceed
-to the training hall. The eastern passage leads back toward the frost chamber.`;
-      } else {
-        desc += `\n\nA shimmering magical barrier blocks the passage north. Ancient runes
-pulse with power - this path is sealed until you prove yourself.
-
-An archway to the east leads to a chamber that emanates cold. The examination
-trials await in that direction.`;
-      }
-
-      desc += `\n\nThe chasm lies to the south.`;
-      return desc;
-    },
   },
 
   // === DEMENTOR ENCOUNTER ===
@@ -255,40 +235,6 @@ the frost chamber.`,
       'east': 'inferi_lake',
     },
     items: [],
-  },
-
-  // === PROTEGO TRAINING ===
-  'training_hall': {
-    id: 'training_hall',
-    name: 'Combat Training Hall',
-    description: `A large, circular chamber designed for magical combat practice.`,
-    connections: {
-      'south': 'chasm_other_side',
-      'north': 'armory_corridor',
-    },
-    items: [],
-    challenge: 'protego',
-    getDescription: (state: GameState) => {
-      if (state.challengeState.protegoTrainingComplete) {
-        return `The training hall is quiet now. The practice dummy stands motionless,
-smoke rising gently from its wand arm. Scorch marks on the floor tell the tale
-of the combat that took place here.
-
-Passages lead south back toward the chasm, and north to a corridor.`;
-      }
-
-      return `A large, circular chamber designed for magical combat practice.
-The floor is marked with dueling circles, and the walls are reinforced with
-protective enchantments.
-
-In the center stands a magical training dummy - an enchanted mannequin dressed
-in dark robes, its wand arm raised. As you enter, runes along its base glow red,
-and it turns to face you. A mechanical voice intones:
-
-"COMBAT ASSESSMENT INITIATED. DEFEND YOURSELF."
-
-The dummy's wand begins to glow ominously.`;
-    },
   },
 
   // === INFERI CHAMBER ===
@@ -465,7 +411,7 @@ more refined. Golden sconces hold ever-burning flames. The air hums with powerfu
 magic.
 
 An ornate archway leads east to what must be a significant location. A narrower
-passage leads west, and south leads back toward the guard corridor.`,
+corridor with weapon racks leads west. South leads back toward the guard corridor.`,
     connections: {
       'south': 'guard_corridor',
       'east': 'death_eater_chamber',
@@ -474,7 +420,7 @@ passage leads west, and south leads back toward the guard corridor.`,
     items: [],
   },
 
-  // === ARMORY CORRIDOR (connects training and guard areas) ===
+  // === ARMORY CORRIDOR ===
   'armory_corridor': {
     id: 'armory_corridor',
     name: 'The Armory Corridor',
@@ -484,10 +430,10 @@ shimmering enchantments.
 
 You notice a small supply closet to the side, its door slightly ajar.
 
-The corridor leads south to the training hall and east toward the inner sanctum.`,
+The corridor leads west and east.`,
     connections: {
-      'south': 'training_hall',
-      'east': 'beyond_guards',
+      'west': 'beyond_guards',
+      'east': 'death_eater_chamber',
     },
     items: ['dittany'],
     getDescription: (state: GameState) => {
@@ -501,7 +447,7 @@ shimmering enchantments.`;
 a vial of Essence of Dittany.`;
       }
 
-      desc += `\n\nThe corridor leads south to the training hall and east toward the inner sanctum.`;
+      desc += `\n\nThe corridor leads west and east toward the inner sanctum.`;
       return desc;
     },
   },
