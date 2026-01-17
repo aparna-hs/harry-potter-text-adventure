@@ -2757,22 +2757,28 @@ function handleHint(state: GameState): CommandResult {
     score: Math.max(0, state.score - 2),
   };
 
+  // Helper to add penalty message to hints
+  const addPenalty = (msg: string, extraPenalty: number = 0): string => {
+    const totalPenalty = 2 + extraPenalty;
+    return `${msg}\n\n[-${totalPenalty} points for hint]`;
+  };
+
   // Entrance hall - locked door
   if (location === 'entrance_hall' && !state.challengeState.doorUnlocked) {
     if (attempts < 2) {
       return {
-        message: "The door is sealed. First-years learn a spell for situations like this.",
+        message: addPenalty("The door is sealed. First-years learn a spell for situations like this."),
         state: newState,
       };
     }
     if (attempts < 5) {
       return {
-        message: "Think back to your first year. What charm unlocks things?",
+        message: addPenalty("Think back to your first year. What charm unlocks things?"),
         state: newState,
       };
     }
     return {
-      message: "The Unlocking Charm is 'Alohomora'.",
+      message: addPenalty("The Unlocking Charm is 'Alohomora'."),
       state: newState,
     };
   }
@@ -2781,18 +2787,18 @@ function handleHint(state: GameState): CommandResult {
   if (location === 'dark_corridor' && !state.challengeState.lumosActive) {
     if (attempts < 2) {
       return {
-        message: "You can't see anything. Even a first-year could solve this problem.",
+        message: addPenalty("You can't see anything. Even a first-year could solve this problem."),
         state: newState,
       };
     }
     if (attempts < 5) {
       return {
-        message: "The darkness is complete. A wand-lighting charm would help.",
+        message: addPenalty("The darkness is complete. A wand-lighting charm would help."),
         state: newState,
       };
     }
     return {
-      message: "The Wand-Lighting Charm is 'Lumos'.",
+      message: addPenalty("The Wand-Lighting Charm is 'Lumos'."),
       state: newState,
     };
   }
@@ -2801,18 +2807,18 @@ function handleHint(state: GameState): CommandResult {
   if (location === 'shadow_passage' && !state.challengeState.passageCleared) {
     if (attempts < 2) {
       return {
-        message: "The space is too tight. Consider your options - magical or physical.",
+        message: addPenalty("The space is too tight. Consider your options - magical or physical."),
         state: newState,
       };
     }
     if (attempts < 5) {
       return {
-        message: "You could get through physically by crawling, or magically by becoming smaller.",
+        message: addPenalty("You could get through physically by crawling, or magically by becoming smaller."),
         state: newState,
       };
     }
     return {
-      message: "Try CRAWL to squeeze through, or use 'Reducio' to shrink yourself.",
+      message: addPenalty("Try CRAWL to squeeze through, or use 'Reducio' to shrink yourself."),
       state: newState,
     };
   }
@@ -2821,18 +2827,18 @@ function handleHint(state: GameState): CommandResult {
   if (location === 'chasm_room' && !state.challengeState.levitationBridgeBuilt) {
     if (attempts < 2) {
       return {
-        message: "The blocks are heavy. Magic can make the impossible possible.",
+        message: addPenalty("The blocks are heavy. Magic can make the impossible possible."),
         state: newState,
       };
     }
     if (attempts < 5) {
       return {
-        message: "A charm that lifts objects... Professor Flitwick taught this in first year.",
+        message: addPenalty("A charm that lifts objects... Professor Flitwick taught this in first year."),
         state: newState,
       };
     }
     return {
-      message: "The Levitation Charm is 'Wingardium Leviosa'.",
+      message: addPenalty("The Levitation Charm is 'Wingardium Leviosa'."),
       state: newState,
     };
   }
@@ -2841,24 +2847,24 @@ function handleHint(state: GameState): CommandResult {
   if (location === 'dementor_chamber' && !state.challengeState.dementorDefeated) {
     if (state.challengeState.dementorPhase === 'memory_needed') {
       return {
-        message: "The spell needs fuel. What gives a Patronus its power? Think of joy.",
+        message: addPenalty("The spell needs fuel. What gives a Patronus its power? Think of joy."),
         state: newState,
       };
     }
     if (attempts < 2) {
       return {
-        message: "This dark creature feeds on happiness. Only one spell can drive it away.",
+        message: addPenalty("This dark creature feeds on happiness. Only one spell can drive it away."),
         state: newState,
       };
     }
     if (attempts < 5) {
       return {
-        message: "A guardian of light against darkness. What spell summons a Patronus?",
+        message: addPenalty("A guardian of light against darkness. What spell summons a Patronus?"),
         state: newState,
       };
     }
     return {
-      message: "The Patronus Charm is 'Expecto Patronum'. You'll need a happy memory.",
+      message: addPenalty("The Patronus Charm is 'Expecto Patronum'. You'll need a happy memory."),
       state: newState,
     };
   }
@@ -2867,18 +2873,18 @@ function handleHint(state: GameState): CommandResult {
   if (location === 'inferi_lake' && !state.challengeState.inferiCleared) {
     if (attempts < 2) {
       return {
-        message: "The undead fear something ancient and primal.",
+        message: addPenalty("The undead fear something ancient and primal."),
         state: newState,
       };
     }
     if (attempts < 5) {
       return {
-        message: "What drives back creatures of darkness? Think of warmth and light...",
+        message: addPenalty("What drives back creatures of darkness? Think of warmth and light..."),
         state: newState,
       };
     }
     return {
-      message: "Fire destroys Inferi. Try 'Incendio' or 'Confringo'.",
+      message: addPenalty("Fire destroys Inferi. Try 'Incendio' or 'Confringo'."),
       state: newState,
     };
   }
@@ -2887,18 +2893,18 @@ function handleHint(state: GameState): CommandResult {
   if (location === 'creature_enclosure' && !state.challengeState.hippogriffTrusts) {
     if (attempts < 2) {
       return {
-        message: "This creature values pride and respect above all. Show proper etiquette.",
+        message: addPenalty("This creature values pride and respect above all. Show proper etiquette."),
         state: newState,
       };
     }
     if (attempts < 5) {
       return {
-        message: "Remember Hagrid's lessons. How do you greet a proud magical creature?",
+        message: addPenalty("Remember Hagrid's lessons. How do you greet a proud magical creature?"),
         state: newState,
       };
     }
     return {
-      message: "BOW to the Hippogriff and wait for it to bow back before moving.",
+      message: addPenalty("BOW to the Hippogriff and wait for it to bow back before moving."),
       state: newState,
     };
   }
@@ -2907,20 +2913,20 @@ function handleHint(state: GameState): CommandResult {
   if (location === 'guard_corridor' && !state.challengeState.stealthPassed) {
     if (attempts < 2) {
       return {
-        message: "Two against one isn't ideal. Perhaps stealth is wiser than combat.",
+        message: addPenalty("Two against one isn't ideal. Perhaps stealth is wiser than combat."),
         state: newState,
       };
     }
     if (attempts < 5) {
-      // Reduce score for needing this hint
+      // Reduce score for needing this hint (2 + 3 = 5 total)
       return {
-        message: `Something to hide yourself, or a spell to confuse them... [-3 points for hint]`,
+        message: addPenalty("Something to hide yourself, or a spell to confuse them...", 3),
         state: { ...newState, score: Math.max(0, newState.score - 3) },
       };
     }
-    // Major hint - bigger score reduction
+    // Major hint - bigger score reduction (2 + 5 = 7 total)
     return {
-      message: `Use 'Confundo' to confuse the guards, or WEAR CLOAK if you found the Invisibility Cloak. [-5 points for detailed hint]`,
+      message: addPenalty("Use 'Confundo' to confuse the guards, or WEAR CLOAK if you found the Invisibility Cloak.", 5),
       state: { ...newState, score: Math.max(0, newState.score - 5) },
     };
   }
@@ -2929,12 +2935,12 @@ function handleHint(state: GameState): CommandResult {
   if (location === 'training_hall' && !state.challengeState.protegoTrainingComplete) {
     if (attempts < 3) {
       return {
-        message: "Combat requires balance - defense and offense. The dummy won't wait.",
+        message: addPenalty("Combat requires balance - defense and offense. The dummy won't wait."),
         state: newState,
       };
     }
     return {
-      message: "Use 'Protego' to block, or offensive spells like 'Stupefy' to attack.",
+      message: addPenalty("Use 'Protego' to block, or offensive spells like 'Stupefy' to attack."),
       state: newState,
     };
   }
@@ -2943,12 +2949,12 @@ function handleHint(state: GameState): CommandResult {
   if (location === 'death_eater_chamber' && !state.challengeState.deathEaterDefeated) {
     if (attempts < 3) {
       return {
-        message: "A proper duel requires both attack and defense. Trade spells wisely.",
+        message: addPenalty("A proper duel requires both attack and defense. Trade spells wisely."),
         state: newState,
       };
     }
     return {
-      message: "Use 'Stupefy', 'Expelliarmus', or other combat spells. 'Protego' defends.",
+      message: addPenalty("Use 'Stupefy', 'Expelliarmus', or other combat spells. 'Protego' defends."),
       state: newState,
     };
   }
@@ -2957,18 +2963,18 @@ function handleHint(state: GameState): CommandResult {
   if (location === 'final_chamber' && !state.challengeState.finalChallengeComplete) {
     if (attempts < 3) {
       return {
-        message: "Remember what Dumbledore said about this mirror. What would a wise wizard do?",
+        message: addPenalty("Remember what Dumbledore said about this mirror. What would a wise wizard do?"),
         state: newState,
       };
     }
     return {
-      message: "TURN AWAY from the mirror to pass safely, or SEE what it reveals (risky - you might fail).",
+      message: addPenalty("TURN AWAY from the mirror to pass safely, or SEE what it reveals (risky - you might fail)."),
       state: newState,
     };
   }
 
   return {
-    message: "Pay attention to descriptions and examine your surroundings. The answer lies within.",
+    message: addPenalty("Pay attention to descriptions and examine your surroundings. The answer lies within."),
     state: newState,
   };
 }

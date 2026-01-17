@@ -119,7 +119,7 @@ Not all candidates survive.`, type: 'game' },
         { text: getLocationDescription(newState), type: 'game' },
         { text: '', type: 'game' },
         { text: 'Type JOURNEY anytime to see where you\'ve been.', color: 'magic', type: 'system' },
-        { text: 'Type HELP for commands or HINT if stuck.', color: 'magic', type: 'system' },
+        { text: 'Type HELP for commands or HINT if stuck (WARNING: hints reduce your score by 2 points).', color: 'magic', type: 'system' },
       ]);
       return;
     }
