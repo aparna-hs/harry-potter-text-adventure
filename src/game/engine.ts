@@ -433,6 +433,53 @@ You're under attack! Cast MUFFLIATO to hide, WEAR CLOAK if you have one, or figh
 You can proceed north past them while remaining hidden.`;
   }
 
+  // Hippogriff attacks if you try to pass without showing respect
+  if (state.location === 'creature_enclosure' &&
+      newLocationId === 'beyond_creature' &&
+      !state.challengeState.hippogriffTrusts) {
+    const damage = 25;
+    const newHealth = Math.max(0, newState.health - damage);
+
+    if (newHealth <= 0) {
+      return {
+        message: `You try to walk past the Hippogriff without proper respect.
+
+The creature screeches in outrage! Its talons flash, catching you across the chest.
+You fall backward, blood streaming from the wounds.
+
+EXAMINATION FAILED - KILLED BY HIPPOGRIFF
+
+You should have bowed. Pride before a proud creature is fatal.`,
+        state: { ...newState, health: 0, gamePhase: 'death' },
+        color: 'damage',
+      };
+    }
+
+    return {
+      message: `You try to walk past the Hippogriff without proper respect.
+
+SCREEEEEE!
+
+The creature rears up in fury! Its sharp talons slash across your arm as you
+stumble backward into the previous chamber. [-${damage} HP]
+
+The Hippogriff blocks your path, wings spread, eyes blazing. You feel blood
+running down your arm.
+
+It will not let you pass until you show proper respect. You must BOW.
+
+${getLocationDescription(state)}`,
+      state: {
+        ...state,
+        health: newHealth,
+        location: state.location, // Force them back to creature_enclosure
+        visitedLocations: state.visitedLocations,
+        journeyLog: state.journeyLog,
+      },
+      color: 'damage',
+    };
+  }
+
   return {
     message: description + extraMessage,
     state: newState,

@@ -735,12 +735,10 @@ export function canMoveTo(state: GameState, direction: string): { allowed: boole
     };
   }
 
-  // Check if hippogriff is blocking
+  // Check if hippogriff is blocking - they can try but will take damage
   if (state.location === 'creature_enclosure' && direction === 'north' && !state.challengeState.hippogriffTrusts) {
-    return {
-      allowed: false,
-      message: "The proud creature blocks your path, its fierce eyes fixed upon you. It does not trust you enough to let you pass."
-    };
+    // Allow movement but flag it - damage will be applied in movement handler
+    return { allowed: true, message: "" };
   }
 
   // Check if guards are blocking (cloak or muffliato can bypass)
