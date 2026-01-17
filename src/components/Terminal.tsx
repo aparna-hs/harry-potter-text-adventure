@@ -20,6 +20,33 @@ const ASCII_TITLE = `
 ╚═╝  ╚═╝ ╚═════╝ ╚═╝  ╚═╝ ╚═════╝ ╚═╝  ╚═╝     ╚══════╝╚═╝  ╚═╝╚═╝  ╚═╝╚═╝     ╚═╝
 `;
 
+const WAND_ART = `
+                                    ✦
+                                 ✧   ★
+                   ═══════════  ✦    ✧
+                  ════════════     ★   ✦   ✧
+                 ═════════════════  ★     ✦
+                ══════════════════════    ★  ✧
+               |                         ✦
+              /                    ★
+             /              ✧         ✦
+            |          ★      ✦
+           |      ✦             ★
+          |           ✧    ✦
+         |
+        |       ⚡  AUROR EXAM  ⚡
+       |
+      /     ★      Lumos Maxima!    ✧
+     /  ✦              ✧       ★
+    |        ✧    ★         ✦
+   ║
+   ║
+   ║
+  ╱
+ ╱
+╱
+`;
+
 const MINISTRY_HEADER = `
 ═══════════════════════════════════════════════════════════════════
               MINISTRY OF MAGIC - AUROR OFFICE
@@ -46,6 +73,7 @@ export default function Terminal() {
   useEffect(() => {
     const initialOutput: OutputLine[] = [
       { text: ASCII_TITLE, color: 'magic', type: 'system' },
+      { text: WAND_ART, color: 'gold', type: 'system' },
       { text: MINISTRY_HEADER, color: 'normal', type: 'system' },
       { text: 'What is your name, candidate?', color: 'gold', type: 'system' },
     ];
@@ -131,6 +159,7 @@ Not all candidates survive.`, type: 'game' },
       setOutput([]);
       const initialOutput: OutputLine[] = [
         { text: ASCII_TITLE, color: 'magic', type: 'system' },
+        { text: WAND_ART, color: 'gold', type: 'system' },
         { text: MINISTRY_HEADER, color: 'normal', type: 'system' },
         { text: 'What is your name, candidate?', color: 'gold', type: 'system' },
       ];
