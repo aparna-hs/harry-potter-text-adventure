@@ -20,6 +20,11 @@ const ASCII_TITLE = `
 ╚═╝  ╚═╝ ╚═════╝ ╚═╝  ╚═╝ ╚═════╝ ╚═╝  ╚═╝     ╚══════╝╚═╝  ╚═╝╚═╝  ╚═╝╚═╝     ╚═╝
 `;
 
+const ASCII_TITLE_MOBILE = `
+ ▄▀█ █ █ █▀█ █▀█ █▀█   █▀▀ ▀▄▀ ▄▀█ █▀▄▀█
+ █▀█ █▄█ █▀▄ █▄█ █▀▄   ██▄ █░█ █▀█ █░▀░█
+`;
+
 const WAND_ART = `
               ══════════════ ✦ ★ ⚡
 `;
@@ -43,20 +48,32 @@ export default function Terminal() {
   const [inputValue, setInputValue] = useState('');
   const [commandHistory, setCommandHistory] = useState<string[]>([]);
   const [historyIndex, setHistoryIndex] = useState(-1);
+  const [isMobile, setIsMobile] = useState(false);
   const outputRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
+  // Detect mobile on mount
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
   // Initialize game on mount
   useEffect(() => {
+    const title = isMobile ? ASCII_TITLE_MOBILE : ASCII_TITLE;
     const initialOutput: OutputLine[] = [
-      { text: ASCII_TITLE, color: 'magic', type: 'system' },
+      { text: title, color: 'magic', type: 'system' },
       { text: WAND_ART, color: 'gold', type: 'system' },
       { text: MINISTRY_HEADER, color: 'normal', type: 'system' },
       { text: 'What is your name, candidate?', color: 'gold', type: 'system' },
     ];
     setOutput(initialOutput);
     setGameState(prev => ({ ...prev, gamePhase: 'naming' }));
-  }, []);
+  }, [isMobile]);
 
   // Auto-scroll to bottom
   useEffect(() => {
@@ -134,8 +151,9 @@ Not all candidates survive.`, type: 'game' },
       const newState = createInitialState();
       setGameState(newState);
       setOutput([]);
+      const title = isMobile ? ASCII_TITLE_MOBILE : ASCII_TITLE;
       const initialOutput: OutputLine[] = [
-        { text: ASCII_TITLE, color: 'magic', type: 'system' },
+        { text: title, color: 'magic', type: 'system' },
         { text: WAND_ART, color: 'gold', type: 'system' },
         { text: MINISTRY_HEADER, color: 'normal', type: 'system' },
         { text: 'What is your name, candidate?', color: 'gold', type: 'system' },
@@ -307,33 +325,37 @@ Not all candidates survive.`, type: 'game' },
         : `${inventoryCount} items`;
 
     return (
-      <div className="flex items-center gap-2 px-4 py-2 border-b border-green-900 flex-wrap">
-        <span className="text-blue-400">{locationName}</span>
-        <span className="text-gray-500 mx-2">|</span>
-        <span className="text-green-400">Health:</span>
-        <div className="flex">
-          {[...Array(filledBlocks)].map((_, i) => (
-            <div key={`filled-${i}`} className={`w-3 h-4 ${barColor} mr-0.5`} />
-          ))}
-          {[...Array(emptyBlocks)].map((_, i) => (
-            <div key={`empty-${i}`} className="w-3 h-4 bg-gray-700 mr-0.5" />
-          ))}
+      <div className="px-2 sm:px-4 py-2 border-b border-green-900 text-xs sm:text-sm">
+        <div className="flex items-center gap-1 sm:gap-2 flex-wrap">
+          <span className="text-blue-400">{locationName}</span>
+          <span className="text-gray-500 hidden sm:inline">|</span>
         </div>
-        <span className="text-green-400">{gameState.health}/{gameState.maxHealth}</span>
-        <span className="text-gray-500 mx-2">|</span>
-        <span className="text-yellow-400">Score: {gameState.score}</span>
-        <span className="text-gray-500 mx-2">|</span>
-        <span className="text-purple-400">Items: {inventoryDisplay}</span>
+        <div className="flex items-center gap-1 sm:gap-2 flex-wrap mt-1">
+          <span className="text-green-400">HP:</span>
+          <div className="flex">
+            {[...Array(filledBlocks)].map((_, i) => (
+              <div key={`filled-${i}`} className={`w-2 sm:w-3 h-3 sm:h-4 ${barColor} mr-0.5`} />
+            ))}
+            {[...Array(emptyBlocks)].map((_, i) => (
+              <div key={`empty-${i}`} className="w-2 sm:w-3 h-3 sm:h-4 bg-gray-700 mr-0.5" />
+            ))}
+          </div>
+          <span className="text-green-400">{gameState.health}/{gameState.maxHealth}</span>
+          <span className="text-gray-500 mx-1">|</span>
+          <span className="text-yellow-400">Score: {gameState.score}</span>
+          <span className="text-gray-500 mx-1">|</span>
+          <span className="text-purple-400">Items: {inventoryDisplay}</span>
+        </div>
       </div>
     );
   };
 
   return (
-    <div className="min-h-screen bg-black flex flex-col">
+    <div className="h-screen bg-black flex flex-col overflow-hidden">
       {/* Header */}
-      <div className="border-b border-green-900 px-4 py-2 bg-gray-900">
-        <div className="text-green-400 font-mono text-sm">
-          MINISTRY OF MAGIC - AUROR EXAMINATION TERMINAL v1.0
+      <div className="border-b border-green-900 px-2 sm:px-4 py-1 sm:py-2 bg-gray-900">
+        <div className="text-green-400 font-mono text-xs sm:text-sm">
+          {isMobile ? 'AUROR EXAM v1.0' : 'MINISTRY OF MAGIC - AUROR EXAMINATION TERMINAL v1.0'}
         </div>
       </div>
 
@@ -343,32 +365,33 @@ Not all candidates survive.`, type: 'game' },
       {/* Output Area */}
       <div
         ref={outputRef}
-        className="flex-1 overflow-y-auto p-4 font-mono text-sm leading-relaxed"
-        style={{ maxHeight: 'calc(100vh - 120px)' }}
+        className="flex-1 overflow-y-auto px-2 sm:px-4 py-2 sm:py-4 font-mono text-xs sm:text-sm leading-relaxed overflow-x-auto"
       >
         {output.map((line, index) => (
-          <div key={index} className={`${getColorClass(line)} whitespace-pre-wrap`}>
+          <div key={index} className={`${getColorClass(line)} whitespace-pre-wrap break-words`}>
             {line.text}
           </div>
         ))}
       </div>
 
       {/* Input Area */}
-      <div className="border-t border-green-900 p-4 bg-gray-900">
+      <div className="border-t border-green-900 px-2 sm:px-4 py-2 sm:py-4 bg-gray-900">
         <div className="flex items-center">
-          <span className="text-green-400 mr-2">&gt;</span>
+          <span className="text-green-400 mr-1 sm:mr-2 text-xs sm:text-sm">&gt;</span>
           <input
             ref={inputRef}
             type="text"
             value={inputValue}
             onChange={(e) => setInputValue(e.target.value)}
             onKeyDown={handleKeyDown}
-            className="flex-1 bg-transparent text-green-400 outline-none font-mono"
+            className="flex-1 bg-transparent text-green-400 outline-none font-mono text-xs sm:text-sm"
             autoFocus
             autoComplete="off"
+            autoCapitalize="off"
+            autoCorrect="off"
             spellCheck={false}
           />
-          <span className="text-green-400 cursor-blink">_</span>
+          <span className="text-green-400 cursor-blink text-xs sm:text-sm">_</span>
         </div>
       </div>
     </div>
