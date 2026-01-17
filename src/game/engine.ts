@@ -54,6 +54,9 @@ function createInitialChallengeState(): ChallengeState {
     stealthActive: false,
     finalChallengeComplete: false,
 
+    // Mirror of Erised
+    mirrorLookedOnce: false,
+
     // Dementor encounter
     dementorPhase: 'initial',
     dementorEngaged: false,
@@ -2490,98 +2493,52 @@ function handleSeeMirror(state: GameState): CommandResult {
     };
   }
 
-  // Randomly pick one of 3 visions
-  const visionRoll = Math.floor(Math.random() * 3);
-
-  // Vision 1: See yourself as an Auror (pass with O grade)
-  if (visionRoll === 0) {
+  // First look - give warning and chance to turn away
+  if (!state.challengeState.mirrorLookedOnce) {
     const newState = {
       ...state,
-      score: state.score + 20,
-      challengesCompleted: new Set([...state.challengesCompleted, 'final']),
-      challengeState: { ...state.challengeState, finalChallengeComplete: true },
-      gamePhase: 'victory' as const,
+      challengeState: {
+        ...state.challengeState,
+        mirrorLookedOnce: true,
+      },
     };
 
     return {
-      message: `You step closer and gaze into the mirror's gleaming surface...
+      message: `You begin to step toward the mirror, drawn to its gleaming surface.
 
-The reflection that stares back is you - but different. You wear the robes of
-an Auror, the badge gleaming on your chest. Behind you, you see grateful faces
-of people you've saved, dark wizards you've brought to justice. But what strikes
-you most is the look in your reflection's eyes: determination, wisdom, and peace.
+For a moment, you glimpse something in the reflection - something that calls to you,
+promises you everything you ever wanted...
 
-You realize: this isn't a fantasy of power. This is simply you, having achieved
-what you've worked for through your own merit and dedication.
+But then you remember Dumbledore's warning: "It does not do to dwell on dreams
+and forget to live."
 
-The voice speaks, warm with approval:
+You hesitate at the edge. Part of you wants desperately to see what the mirror
+will show. But another part knows the danger.
 
-"You have looked into Erised and seen not power, but purpose. Not dominion, but
-duty. The mirror shows you nothing you cannot become through honest effort. This
-is the mark of a true Auror."
+You can still TURN AWAY and walk past safely.
 
-The mirror fades, and a door appears.
+Or you can LOOK again and gaze into your heart's desire...
 
-[FINAL CHALLENGE COMPLETED - +20 points (Outstanding)]
-
-You step through the door and emerge into sunlight. The examiners smile.
-
-"Congratulations, Auror ${state.playerName}. You have earned this."`,
-      state: newState,
-      color: 'gold',
-    };
-  }
-
-  // Vision 2: See yourself happy with family/friends (pass with reduced score)
-  if (visionRoll === 1) {
-    const newState = {
-      ...state,
-      score: state.score + 10,
-      challengesCompleted: new Set([...state.challengesCompleted, 'final']),
-      challengeState: { ...state.challengeState, finalChallengeComplete: true },
-      gamePhase: 'victory' as const,
-    };
-
-    return {
-      message: `You step closer and gaze into the mirror's gleaming surface...
-
-You see yourself surrounded by loved ones - family, friends, all smiling. Everyone
-you care about is safe, happy, together. It's a beautiful vision, and for a moment
-you're lost in it. The warmth, the joy...
-
-But then you catch yourself. This is desire without action. The mirror can't make
-this real - only you can, through your choices and dedication as an Auror.
-
-You step back, breaking the spell.
-
-The voice speaks:
-
-"You gazed into Erised and were tempted by personal happiness. A natural desire,
-but an Auror must remember: duty first, always. You recovered yourself in time.
-You pass, but barely."
-
-The mirror fades, and a door appears.
-
-[FINAL CHALLENGE COMPLETED - +10 points (Acceptable)]
-
-You step through. The examiners nod curtly.
-
-"You passed. But remember: hesitation costs lives in the field."`,
+But be warned: The mirror has destroyed many who looked too deeply.`,
       state: newState,
       color: 'warning',
     };
   }
 
-  // Vision 3: See power, control, dark magic (FAIL)
-  const newState = {
-    ...state,
-    score: 0,
-    challengeState: { ...state.challengeState, finalChallengeComplete: true },
-    gamePhase: 'death' as const,
-  };
+  // Second look - roll for outcome (90% normal desire, 10% dark desire)
+  const visionRoll = Math.floor(Math.random() * 10);
 
-  return {
-    message: `You step closer and gaze into the mirror's gleaming surface...
+  // 10% chance: See dark desire (FAIL)
+  if (visionRoll === 0) {
+    const newState = {
+      ...state,
+      score: 0,
+      challengeState: { ...state.challengeState, finalChallengeComplete: true },
+      gamePhase: 'death' as const,
+    };
+
+    return {
+      message: `You step closer and gaze into the mirror's gleaming surface...
 
 You see yourself - powerful, commanding, feared. Dark wizards bow before you.
 Ancient magic crackles at your fingertips. You stand above everyone, answering
@@ -2606,8 +2563,48 @@ EXAMINATION FAILED - CORRUPTED BY DESIRE
 
 An Auror who desires power above all else is a Dark wizard in waiting.
 This is an automatic disqualification, regardless of previous performance.`,
+      state: newState,
+      color: 'damage',
+    };
+  }
+
+  // 90% chance: See normal Auror desire (pass with lower score)
+  const newState = {
+    ...state,
+    score: state.score + 10,
+    challengesCompleted: new Set([...state.challengesCompleted, 'final']),
+    challengeState: { ...state.challengeState, finalChallengeComplete: true },
+    gamePhase: 'victory' as const,
+  };
+
+  return {
+    message: `Unable to resist, you step closer and gaze into the mirror's gleaming surface...
+
+The reflection that stares back is you - but different. You wear the robes of
+an Auror, the badge gleaming on your chest. Behind you, you see grateful faces
+of people you've saved, dark wizards you've brought to justice. But what strikes
+you most is the look in your reflection's eyes: determination, wisdom, and peace.
+
+You realize: this isn't a fantasy of power. This is simply you, having achieved
+what you've worked for through your own merit and dedication.
+
+It takes effort, but you tear your eyes away from the mirror.
+
+The voice speaks, with measured approval:
+
+"You looked into Erised against better judgment, but your heart revealed itself
+to be true. You desire duty and purpose, not power. This saves you - barely.
+Remember: a wiser Auror would have turned away."
+
+The mirror fades, and a door appears.
+
+[FINAL CHALLENGE COMPLETED - +10 points (Acceptable - risky choice)]
+
+You step through. The examiners nod, but their expressions are stern.
+
+"You passed. But remember: luck favors the prepared, not the reckless."`,
     state: newState,
-    color: 'damage',
+    color: 'warning',
   };
 }
 

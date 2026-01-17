@@ -43,6 +43,9 @@ export interface ChallengeState {
   stealthActive: boolean;
   finalChallengeComplete: boolean;
 
+  // Mirror of Erised
+  mirrorLookedOnce: boolean;
+
   // Dementor encounter
   dementorPhase: 'initial' | 'first_patronus' | 'memory_needed' | 'complete';
   dementorEngaged: boolean;
