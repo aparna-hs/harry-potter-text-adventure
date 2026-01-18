@@ -24,6 +24,7 @@ export interface GameState {
 
   // Attempt tracking for hints
   attemptCounts: Record<string, number>;
+  hintRequestCounts: Record<string, number>;
 }
 
 export interface ChallengeState {

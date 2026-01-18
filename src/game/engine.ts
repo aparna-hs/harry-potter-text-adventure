@@ -33,6 +33,7 @@ export function createInitialState(): GameState {
     challengeState: createInitialChallengeState(),
     combatState: null,
     attemptCounts: {},
+    hintRequestCounts: {},
   };
 }
 
@@ -2505,15 +2506,19 @@ function handleSystem(state: GameState, verb: string): CommandResult {
 
 // Hint system - progressive hints that get more specific with more attempts
 function handleHint(state: GameState): CommandResult {
-  const attempts = state.attemptCounts[state.location] || 0;
+  const hintRequests = state.hintRequestCounts[state.location] || 0;
   const location = state.location;
 
-  // Increment hints used
-  const newState = {
+  // Helper to create new state with penalty (only called for NEW hints)
+  const createNewState = (extraPenalty: number = 0) => ({
     ...state,
     hintsUsed: state.hintsUsed + 1,
-    score: Math.max(0, state.score - 2),
-  };
+    score: state.score - 2 - extraPenalty,
+    hintRequestCounts: {
+      ...state.hintRequestCounts,
+      [state.location]: hintRequests + 1,
+    },
+  });
 
   // Helper to add penalty message to hints
   const addPenalty = (msg: string, extraPenalty: number = 0): string => {
@@ -2521,83 +2526,72 @@ function handleHint(state: GameState): CommandResult {
     return `${msg}\n\n[-${totalPenalty} points for hint]`;
   };
 
+  // Helper for repeated hints (no penalty)
+  const repeatHint = (msg: string): string => {
+    return `${msg}\n\n[No additional penalty for repeated hint]`;
+  };
+
   // Entrance hall - locked door
   if (location === 'entrance_hall' && !state.challengeState.doorUnlocked) {
-    if (attempts < 2) {
+    if (hintRequests === 0) {
       return {
-        message: addPenalty("The door is sealed. First-years learn a spell for situations like this."),
-        state: newState,
+        message: addPenalty("The door is sealed. Maybe a charm can unlock doors?"),
+        state: createNewState(),
       };
     }
-    if (attempts < 5) {
-      return {
-        message: addPenalty("Think back to your first year. What charm unlocks things?"),
-        state: newState,
-      };
-    }
+    // Repeated hint - no penalty
     return {
-      message: addPenalty("The Unlocking Charm is 'Alohomora'."),
-      state: newState,
+      message: repeatHint("The door is sealed. Maybe a charm can unlock doors?"),
+      state,
     };
   }
 
   // Dark corridor - needs light
   if (location === 'dark_corridor' && !state.challengeState.lumosActive) {
-    if (attempts < 2) {
+    if (hintRequests === 0) {
       return {
-        message: addPenalty("You can't see anything. Even a first-year could solve this problem."),
-        state: newState,
+        message: addPenalty("You can't see anything. A wand-lighting charm would help."),
+        state: createNewState(),
       };
     }
-    if (attempts < 5) {
-      return {
-        message: addPenalty("The darkness is complete. A wand-lighting charm would help."),
-        state: newState,
-      };
-    }
+    // Repeated hint - no penalty
     return {
-      message: addPenalty("The Wand-Lighting Charm is 'Lumos'."),
-      state: newState,
+      message: repeatHint("You can't see anything. A wand-lighting charm would help."),
+      state,
     };
   }
 
   // Shadow passage - needs to crawl or shrink
   if (location === 'shadow_passage' && !state.challengeState.passageCleared) {
-    if (attempts < 2) {
+    if (hintRequests === 0) {
       return {
         message: addPenalty("The space is too tight. Consider your options - magical or physical."),
-        state: newState,
-      };
-    }
-    if (attempts < 5) {
-      return {
-        message: addPenalty("You could get through physically by crawling, or magically by becoming smaller."),
-        state: newState,
+        state: createNewState(),
       };
     }
     return {
-      message: addPenalty("Try CRAWL to squeeze through, or use 'Reducio' to shrink yourself."),
-      state: newState,
+      message: repeatHint("The space is too tight. Consider your options - magical or physical."),
+      state,
     };
   }
 
   // Chasm room - levitation
   if (location === 'chasm_room' && !state.challengeState.levitationBridgeBuilt) {
-    if (attempts < 2) {
+    if (hintRequests === 0) {
       return {
-        message: addPenalty("The blocks are heavy. Magic can make the impossible possible."),
-        state: newState,
+        message: addPenalty("The blocks are heavy. A charm that lifts objects would help."),
+        state: createNewState(),
       };
     }
-    if (attempts < 5) {
+    if (hintRequests === 1) {
       return {
-        message: addPenalty("A charm that lifts objects... Professor Flitwick taught this in first year."),
-        state: newState,
+        message: addPenalty("Remember Charms class with Professor Flitwick. The feather lesson."),
+        state: createNewState(),
       };
     }
     return {
-      message: addPenalty("The Levitation Charm is 'Wingardium Leviosa'."),
-      state: newState,
+      message: repeatHint("Remember Charms class with Professor Flitwick. The feather lesson."),
+      state,
     };
   }
 
@@ -2606,120 +2600,137 @@ function handleHint(state: GameState): CommandResult {
     if (state.challengeState.dementorPhase === 'memory_needed') {
       return {
         message: addPenalty("The spell needs fuel. What gives a Patronus its power? Think of joy."),
-        state: newState,
+        state: createNewState(),
       };
     }
-    if (attempts < 2) {
+    if (hintRequests === 0) {
       return {
-        message: addPenalty("This dark creature feeds on happiness. Only one spell can drive it away."),
-        state: newState,
+        message: addPenalty("This dark creature feeds on happiness. A guardian of light can drive it away."),
+        state: createNewState(),
       };
     }
-    if (attempts < 5) {
+    if (hintRequests === 1) {
       return {
-        message: addPenalty("A guardian of light against darkness. What spell summons a Patronus?"),
-        state: newState,
+        message: addPenalty("Harry Potter used this against dementors. It requires a powerful happy memory."),
+        state: createNewState(),
       };
     }
     return {
-      message: addPenalty("The Patronus Charm is 'Expecto Patronum'. You'll need a happy memory."),
-      state: newState,
+      message: repeatHint("Harry Potter used this against dementors. It requires a powerful happy memory."),
+      state,
     };
   }
 
   // Inferi lake
   if (location === 'inferi_lake' && !state.challengeState.inferiCleared) {
-    if (attempts < 2) {
+    if (hintRequests === 0) {
       return {
-        message: addPenalty("The undead fear something ancient and primal."),
-        state: newState,
+        message: addPenalty("The undead fear something ancient and primal. Think of warmth and light..."),
+        state: createNewState(),
       };
     }
-    if (attempts < 5) {
+    if (hintRequests === 1) {
       return {
-        message: addPenalty("What drives back creatures of darkness? Think of warmth and light..."),
-        state: newState,
+        message: addPenalty("These creatures are destroyed by fire. What fire spells do you know?"),
+        state: createNewState(),
       };
     }
     return {
-      message: addPenalty("Fire destroys Inferi. Try 'Incendio' or 'Confringo'."),
-      state: newState,
+      message: repeatHint("These creatures are destroyed by fire. What fire spells do you know?"),
+      state,
     };
   }
 
   // Hippogriff
   if (location === 'creature_enclosure' && !state.challengeState.hippogriffTrusts) {
-    if (attempts < 2) {
+    if (hintRequests === 0) {
       return {
         message: addPenalty("This creature values pride and respect above all. Show proper etiquette."),
-        state: newState,
+        state: createNewState(),
       };
     }
-    if (attempts < 5) {
+    if (hintRequests === 1) {
       return {
-        message: addPenalty("Remember Hagrid's lessons. How do you greet a proud magical creature?"),
-        state: newState,
+        message: addPenalty("Remember Hagrid's Care of Magical Creatures lessons. How did he greet Buckbeak?"),
+        state: createNewState(),
       };
     }
     return {
-      message: addPenalty("BOW to the Hippogriff and wait for it to bow back before moving."),
-      state: newState,
+      message: repeatHint("Remember Hagrid's Care of Magical Creatures lessons. How did he greet Buckbeak?"),
+      state,
     };
   }
 
   // Guard corridor
   if (location === 'guard_corridor' && !state.challengeState.stealthPassed) {
-    if (attempts < 2) {
+    if (hintRequests === 0) {
       return {
         message: addPenalty("Two against one isn't ideal. Perhaps stealth is wiser than combat."),
-        state: newState,
+        state: createNewState(),
       };
     }
-    if (attempts < 5) {
-      // Reduce score for needing this hint (2 + 3 = 5 total)
+    if (hintRequests === 1) {
       return {
-        message: addPenalty("Something to hide yourself, or a spell to confuse them...", 3),
-        state: { ...newState, score: Math.max(0, newState.score - 3) },
+        message: addPenalty("You could confuse their minds with a spell, or hide yourself completely."),
+        state: createNewState(),
       };
     }
-    // Major hint - bigger score reduction (2 + 5 = 7 total)
     return {
-      message: addPenalty("Use 'Confundo' to confuse the guards, or WEAR CLOAK if you found the Invisibility Cloak.", 5),
-      state: { ...newState, score: Math.max(0, newState.score - 5) },
+      message: repeatHint("You could confuse their minds with a spell, or hide yourself completely."),
+      state,
     };
   }
 
   // Death Eater duel
   if (location === 'death_eater_chamber' && !state.challengeState.deathEaterDefeated) {
-    if (attempts < 3) {
+    if (hintRequests === 0) {
       return {
         message: addPenalty("A proper duel requires both attack and defense. Trade spells wisely."),
-        state: newState,
+        state: createNewState(),
+      };
+    }
+    if (hintRequests === 1) {
+      return {
+        message: addPenalty("Use stunning or disarming spells to attack. Shield charms protect you."),
+        state: createNewState(),
       };
     }
     return {
-      message: addPenalty("Use 'Stupefy', 'Expelliarmus', or other combat spells. 'Protego' defends."),
-      state: newState,
+      message: repeatHint("Use stunning or disarming spells to attack. Shield charms protect you."),
+      state,
     };
   }
 
   // Final chamber - Mirror of Erised
   if (location === 'final_chamber' && !state.challengeState.finalChallengeComplete) {
-    if (attempts < 3) {
+    if (hintRequests === 0) {
       return {
         message: addPenalty("Remember what Dumbledore said about this mirror. What would a wise wizard do?"),
-        state: newState,
+        state: createNewState(),
+      };
+    }
+    if (hintRequests === 1) {
+      return {
+        message: addPenalty("Those who seek power are tempted. Those who seek wisdom resist. Choose carefully."),
+        state: createNewState(),
       };
     }
     return {
-      message: addPenalty("TURN AWAY from the mirror to pass safely, or SEE what it reveals (risky - you might fail)."),
-      state: newState,
+      message: repeatHint("Those who seek power are tempted. Those who seek wisdom resist. Choose carefully."),
+      state,
     };
   }
 
+  // Default hint
+  if (hintRequests === 0) {
+    return {
+      message: addPenalty("Pay attention to descriptions and examine your surroundings. The answer lies within."),
+      state: createNewState(),
+    };
+  }
   return {
-    message: addPenalty("Pay attention to descriptions and examine your surroundings. The answer lies within."),
-    state: newState,
+    message: repeatHint("Pay attention to descriptions and examine your surroundings. The answer lies within."),
+    state,
   };
 }
 
