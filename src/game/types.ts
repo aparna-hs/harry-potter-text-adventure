@@ -8,7 +8,7 @@ export interface GameState {
   inventory: string[];
   visitedLocations: Set<string>;
   challengesCompleted: Set<string>;
-  gamePhase: 'intro' | 'naming' | 'playing' | 'victory' | 'death';
+  gamePhase: 'intro' | 'naming' | 'ready' | 'playing' | 'victory' | 'death';
   score: number;
   hintsUsed: number;
   episkeyCasts: number;

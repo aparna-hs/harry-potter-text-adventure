@@ -35,7 +35,11 @@ const MINISTRY_HEADER = `
                    FINAL EXAMINATION
 ═══════════════════════════════════════════════════════════════════
 
-This is the final test to become an Auror.
+Congratulations on completing your Auror training program.
+You have passed the written exams, physical conditioning, and
+dueling qualifications.
+
+This is your FINAL test - the practical examination.
 
 Real magical threats. Real danger.
 Some candidates don't return.
@@ -107,42 +111,60 @@ export default function Terminal() {
     // Handle naming phase
     if (gameState.gamePhase === 'naming') {
       const name = trimmedInput;
-      const newState = { ...gameState, playerName: name, gamePhase: 'playing' as const };
+      const newState = { ...gameState, playerName: name, gamePhase: 'ready' as const };
       setGameState(newState);
 
       addOutput([
         { text: '', type: 'game' },
-        { text: `Good luck, ${name}.`, color: 'gold', type: 'system' },
-        { text: '', type: 'game' },
-        { text: '═══════════════════════════════════════════════════════════════════', type: 'system' },
-        { text: '                         BRIEFING', color: 'gold', type: 'system' },
-        { text: '═══════════════════════════════════════════════════════════════════', type: 'system' },
+        { text: `Welcome, ${name}.`, color: 'gold', type: 'system' },
         { text: '', type: 'game' },
         { text: `You are about to enter the Ministry's underground examination maze.
 Your goal: Navigate through dangerous challenges and reach the final chamber.
 
-Along the way, you will face:
-  • Dark creatures that test your defensive magic
-  • Puzzles that require knowledge of spells
-  • Combat situations requiring quick thinking
-  • A final moral test that determines your worthiness
-
-Remember your training. Cast spells by typing the incantation (e.g., LUMOS).
-Explore by moving NORTH, SOUTH, EAST, or WEST.
-EXAMINE objects, READ runes for hints, and check your INVENTORY.
-
-Your wand is ready. Your knowledge will be tested.
-Not all candidates survive.`, type: 'game' },
+This will test everything you have learned. Your wand is ready.
+Your knowledge will be tested. Not all candidates survive.`, type: 'game' },
         { text: '', type: 'game' },
-        { text: '═══════════════════════════════════════════════════════════════════', type: 'system' },
-        { text: '                    YOUR EXAMINATION BEGINS', color: 'gold', type: 'system' },
-        { text: '═══════════════════════════════════════════════════════════════════', type: 'system' },
-        { text: '', type: 'game' },
-        { text: getLocationDescription(newState), type: 'game' },
-        { text: '', type: 'game' },
-        { text: 'Type JOURNEY anytime to see where you\'ve been.', color: 'magic', type: 'system' },
-        { text: 'Type HELP for commands or HINT if stuck (WARNING: hints reduce your score by 2 points).', color: 'magic', type: 'system' },
+        { text: 'Type START when you are ready to begin.', color: 'magic', type: 'system' },
       ]);
+      return;
+    }
+
+    // Handle ready phase - waiting for START command
+    if (gameState.gamePhase === 'ready') {
+      if (trimmedInput.toLowerCase() === 'start') {
+        const newState = { ...gameState, gamePhase: 'playing' as const };
+        setGameState(newState);
+
+        addOutput([
+          { text: '', type: 'game' },
+          { text: '═══════════════════════════════════════════════════════════════════', type: 'system' },
+          { text: '                         COMMANDS', color: 'gold', type: 'system' },
+          { text: '═══════════════════════════════════════════════════════════════════', type: 'system' },
+          { text: '', type: 'game' },
+          { text: `Cast spells by typing the incantation (e.g., LUMOS)
+Move: NORTH, SOUTH, EAST, WEST (or N, S, E, W)
+Interact: EXAMINE, TAKE, USE, READ
+Info: INVENTORY (or I), LOOK, JOURNEY, HELP
+
+Type HINT if stuck (WARNING: hints reduce your score by 2 points)`, type: 'game' },
+          { text: '', type: 'game' },
+          { text: '═══════════════════════════════════════════════════════════════════', type: 'system' },
+          { text: '                    YOUR EXAMINATION BEGINS', color: 'gold', type: 'system' },
+          { text: '═══════════════════════════════════════════════════════════════════', type: 'system' },
+          { text: '', type: 'game' },
+          { text: getLocationDescription(newState), type: 'game' },
+          { text: '', type: 'game' },
+          { text: 'Type JOURNEY anytime to see where you\'ve been.', color: 'magic', type: 'system' },
+          { text: 'Type HELP for commands or HINT if stuck (WARNING: hints reduce your score by 2 points).', color: 'magic', type: 'system' },
+          { text: '', type: 'game' },
+          { text: `Good luck, ${newState.playerName}.`, color: 'gold', type: 'system' },
+        ]);
+      } else {
+        addOutput([
+          { text: '', type: 'game' },
+          { text: 'Type START to begin your examination.', color: 'warning', type: 'system' },
+        ]);
+      }
       return;
     }
 
