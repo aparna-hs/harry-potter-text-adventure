@@ -411,7 +411,7 @@ more refined. Golden sconces hold ever-burning flames. The air hums with powerfu
 magic.
 
 An ornate archway leads east to what must be a significant location. A narrower
-corridor with weapon racks leads west. South leads back toward the guard corridor.`,
+passage leads west, and south leads back toward the guard corridor.`,
     connections: {
       'south': 'guard_corridor',
       'east': 'death_eater_chamber',
@@ -426,28 +426,27 @@ corridor with weapon racks leads west. South leads back toward the guard corrido
     name: 'The Armory Corridor',
     description: `A corridor lined with empty weapon racks and display cases. Most
 of the magical artifacts have been removed, but a few remain, protected behind
-shimmering enchantments.
+shimmering enchantments. The corridor ends at a locked door to the south.
 
 You notice a small supply closet to the side, its door slightly ajar.
 
-The corridor leads west and east.`,
+The corridor leads east back toward the inner sanctum.`,
     connections: {
-      'west': 'beyond_guards',
-      'east': 'death_eater_chamber',
+      'east': 'beyond_guards',
     },
     items: ['dittany'],
     getDescription: (state: GameState) => {
       const dittanyTaken = state.inventory.filter(i => i === 'dittany').length >= 2;
       let desc = `A corridor lined with empty weapon racks and display cases. Most
 of the magical artifacts have been removed, but a few remain, protected behind
-shimmering enchantments.`;
+shimmering enchantments. The corridor ends at a locked door to the south.`;
 
       if (!dittanyTaken) {
         desc += `\n\nYou notice a small supply closet with its door ajar. Inside, you spot
 a vial of Essence of Dittany.`;
       }
 
-      desc += `\n\nThe corridor leads west and east toward the inner sanctum.`;
+      desc += `\n\nThe corridor leads east back toward the inner sanctum.`;
       return desc;
     },
   },
