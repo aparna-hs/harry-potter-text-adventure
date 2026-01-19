@@ -426,7 +426,7 @@ passage leads west, and south leads back toward the guard corridor.`,
     name: 'The Armory Corridor',
     description: `A corridor lined with empty weapon racks and display cases. Most
 of the magical artifacts have been removed, but a few remain, protected behind
-shimmering enchantments. The corridor ends at a locked door to the south.
+shimmering enchantments.
 
 You notice a small supply closet to the side, its door slightly ajar.
 
@@ -439,7 +439,7 @@ The corridor leads east back toward the inner sanctum.`,
       const dittanyTaken = state.inventory.filter(i => i === 'dittany').length >= 2;
       let desc = `A corridor lined with empty weapon racks and display cases. Most
 of the magical artifacts have been removed, but a few remain, protected behind
-shimmering enchantments. The corridor ends at a locked door to the south.`;
+shimmering enchantments.`;
 
       if (!dittanyTaken) {
         desc += `\n\nYou notice a small supply closet with its door ajar. Inside, you spot
