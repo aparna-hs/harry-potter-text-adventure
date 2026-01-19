@@ -101,6 +101,34 @@ export function processCommand(state: GameState, input: string): CommandResult {
     return { message: unforgivableMessage, state: newState, color: 'warning' };
   }
 
+  // Easter egg: Secret west_z command at entrance hall
+  if (state.location === 'entrance_hall' && input.trim().toLowerCase() === 'west_z') {
+    return {
+      message: `You attempt to venture west with mysterious confidence...
+
+The water seems to ripple with ancient magic. A ghostly voice echoes from the depths:
+
+"Ah, one who seeks the secret path! But alas, this way is reserved only for
+those who have truly proven their devotion to the wizarding world.
+
+Go forth, young wizard. Read all seven sacred tomes of Harry Potter - every page,
+every word, every footnote. Study the house-elf liberation movements, memorize
+the Quidditch World Cup results, learn why Dumbledore loved socks.
+
+Only when you have absorbed the complete chronicles, when you can recite
+Hermione's class schedule and name every Weasley in birth order, when you
+dream in Parseltongue and sneeze in spells...
+
+ONLY THEN shall you be deemed eligible to venture west into these sacred waters.
+
+For now, the passage remains closed to you. Go! Read! Return when you are worthy!"
+
+The voice fades. The water stills. Perhaps you should try another direction.`,
+      state: newState,
+      color: 'magic',
+    };
+  }
+
   // Process the command
   let result: CommandResult;
   switch (command.type) {
