@@ -101,10 +101,11 @@ export function processCommand(state: GameState, input: string): CommandResult {
     return { message: unforgivableMessage, state: newState, color: 'warning' };
   }
 
-  // Easter egg: Secret west_z command at entrance hall
-  if (state.location === 'entrance_hall' && input.trim().toLowerCase() === 'west_z') {
+  // Easter egg: Secret west_z command at water passage
+  const normalizedInput = input.trim().toLowerCase();
+  if (state.location === 'water_passage' && (normalizedInput === 'west_z' || normalizedInput === 'go west_z')) {
     return {
-      message: `You attempt to venture west with mysterious confidence...
+      message: `You attempt to venture deeper west with mysterious confidence...
 
 The water seems to ripple with ancient magic. A ghostly voice echoes from the depths:
 
@@ -123,7 +124,7 @@ ONLY THEN shall you be deemed eligible to venture west into these sacred waters.
 
 For now, the passage remains closed to you. Go! Read! Return when you are worthy!"
 
-The voice fades. The water stills. Perhaps you should try another direction.`,
+The voice fades. The water stills. Perhaps you should head back east.`,
       state: newState,
       color: 'magic',
     };
