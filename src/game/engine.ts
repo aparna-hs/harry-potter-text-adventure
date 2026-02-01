@@ -251,6 +251,8 @@ The guards are alert and attacking. You need a solution quickly!`,
     // Check if the command was a combat spell (offensive or defensive)
     const combatSpells = ['stupefy', 'expelliarmus', 'petrificus totalus', 'impedimenta',
                           'reducto', 'confringo', 'incendio', 'flipendo', 'depulso',
+                          'bombarda', 'diffindo', 'incarcerous', 'levicorpus',
+                          'rictusempra', 'locomotor mortis', 'tarantallegra', 'densaugeo', 'furnunculus',
                           'protego', 'protego maxima'];
     const isCombatSpell = command.type === 'spell' && combatSpells.includes(command.verb);
 
@@ -604,6 +606,15 @@ function handleSpell(state: GameState, command: ParsedCommand): CommandResult {
     case 'reducto':
     case 'flipendo':
     case 'depulso':
+    case 'bombarda':
+    case 'diffindo':
+    case 'incarcerous':
+    case 'levicorpus':
+    case 'rictusempra':
+    case 'locomotor mortis':
+    case 'tarantallegra':
+    case 'densaugeo':
+    case 'furnunculus':
       return handleOffensiveSpell(state, spellName);
 
     case 'confundo':
@@ -1133,6 +1144,36 @@ function handleDeathEaterCombat(state: GameState, spell: string): CommandResult 
   } else if (spell === 'flipendo') {
     damage = 15;
     spellEffect = 'The knockback jinx sends them stumbling backward!';
+  } else if (spell === 'bombarda') {
+    damage = 30;
+    spellEffect = 'The explosive curse detonates with tremendous force!';
+  } else if (spell === 'diffindo') {
+    damage = 25;
+    spellEffect = 'The severing charm slashes through their robes!';
+  } else if (spell === 'incarcerous') {
+    damage = 20;
+    spellEffect = 'Ropes burst from your wand, binding their arms!';
+  } else if (spell === 'levicorpus') {
+    damage = 20;
+    spellEffect = 'They\'re yanked into the air by their ankle!';
+  } else if (spell === 'locomotor mortis') {
+    damage = 15;
+    spellEffect = 'Their legs snap together - the Leg-Locker Curse strikes!';
+  } else if (spell === 'rictusempra') {
+    damage = 10;
+    spellEffect = 'They double over, fighting uncontrollable laughter!';
+  } else if (spell === 'tarantallegra') {
+    damage = 10;
+    spellEffect = 'Their legs begin dancing uncontrollably!';
+  } else if (spell === 'densaugeo') {
+    damage = 10;
+    spellEffect = 'Their front teeth begin growing rapidly!';
+  } else if (spell === 'furnunculus') {
+    damage = 10;
+    spellEffect = 'Boils erupt across their exposed skin!';
+  } else if (spell === 'depulso') {
+    damage = 15;
+    spellEffect = 'The banishing charm throws them backward!';
   }
 
   const newDeHealth = Math.max(0, deHealth - damage);
