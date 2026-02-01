@@ -32,6 +32,12 @@ export const SPELLS: Record<string, SpellDefinition> = {
   'flipendo': { incantation: 'flipendo', category: 'offense' },
   'depulso': { incantation: 'depulso', category: 'offense' },
   'rictusempra': { incantation: 'rictusempra', category: 'offense' },
+  'incarcerous': { incantation: 'incarcerous', category: 'offense' },
+  'levicorpus': { incantation: 'levicorpus', category: 'offense' },
+  'locomotor mortis': { incantation: 'locomotor mortis', category: 'offense' },
+  'tarantallegra': { incantation: 'tarantallegra', category: 'offense' },
+  'densaugeo': { incantation: 'densaugeo', category: 'offense' },
+  'furnunculus': { incantation: 'furnunculus', category: 'offense' },
   'sectumsempra': { incantation: 'sectumsempra', category: 'offense' },
 
   // Utility spells
